@@ -6,13 +6,12 @@
     android:orientation="vertical"
     android:background="#FAFAFA">
 
-    <!-- Header -->
+    <!-- Header + Search -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:paddingBottom="12dp"
+        android:padding="20dp"
         android:background="#FFFFFF">
 
         <TextView
@@ -22,7 +21,8 @@
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="#1A1A1A"
-            android:layout_marginBottom="4dp"/>
+            android:layout_marginBottom="4dp"
+            android:fontFamily="@font/poppins_semibold"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -30,9 +30,10 @@
             android:text="Search and log what you eat"
             android:textSize="14sp"
             android:textColor="#9E9E9E"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/poppins_semibold"/>
 
-        <!-- Search Bar -->
+        <!-- Search bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
@@ -47,14 +48,15 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:hint="Search a food e.g. apple, chicken..."
+                android:hint="Type a food to search..."
                 android:textSize="15sp"
                 android:textColor="#1A1A1A"
                 android:textColorHint="#BDBDBD"
                 android:background="@null"
                 android:inputType="text"
                 android:imeOptions="actionSearch"
-                android:singleLine="true"/>
+                android:singleLine="true"
+                android:fontFamily="@font/poppins_semibold"/>
 
             <Button
                 android:id="@+id/btn_search"
@@ -67,7 +69,23 @@
                 app:cornerRadius="8dp"/>
 
         </LinearLayout>
+
+        <!-- Loading indicator -->
+        <ProgressBar
+            android:id="@+id/search_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"/>
+
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F0F0F0"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -77,18 +95,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="20dp">
 
-            <!-- Loading indicator -->
-            <ProgressBar
-                android:id="@+id/progress_bar"
+            <!-- Frequent foods -->
+            <TextView
+                android:id="@+id/tv_frequent_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:text="FREQUENT FOODS"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#9E9E9E"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp"
                 android:visibility="gone"
+                android:fontFamily="@font/poppins_semibold"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/frequent_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- Search Result Card -->
+            <!-- Search result card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/card_search_result"
                 android:layout_width="match_parent"
@@ -110,7 +139,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="4dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -122,16 +151,19 @@
                                 android:id="@+id/tv_food_name"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="18sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"
-                                android:textColor="#1A1A1A"/>
+                                android:textColor="#1A1A1A"
+                                android:fontFamily="@font/poppins_semibold"/>
 
                             <TextView
+                                android:id="@+id/tv_portion_label"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="per 100g"
+                                android:text="per 150g"
                                 android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
+                                android:textColor="#9E9E9E"
+                                android:fontFamily="@font/poppins_semibold"/>
 
                         </LinearLayout>
 
@@ -139,96 +171,159 @@
                             android:id="@+id/tv_calories_big"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="32sp"
+                            android:textSize="28sp"
                             android:textStyle="bold"
-                            android:textColor="#FF9800"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text=" kcal"
-                            android:textSize="14sp"
-                            android:textColor="#9E9E9E"
-                            android:layout_marginTop="8dp"/>
+                            android:textColor="#FF9800"
+                            android:fontFamily="@font/poppins_semibold"/>
 
                     </LinearLayout>
 
-                    <!-- Macro row -->
+                    <!-- Macros row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginBottom="16dp">
 
-                        <!-- Protein -->
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/tv_protein"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-                            <TextView
-                                android:id="@+id/tv_protein"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="#4CAF50"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Protein"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
+                            android:textSize="14sp"
+                            android:textColor="#4CAF50"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/poppins_semibold"/>
 
-                        <!-- Carbs -->
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/tv_carbs"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-                            <TextView
-                                android:id="@+id/tv_carbs"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="#2196F3"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Carbs"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
+                            android:textSize="14sp"
+                            android:textColor="#2196F3"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:fontFamily="@font/poppins_semibold"/>
 
-                        <!-- Fat -->
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/tv_fat"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center">
-                            <TextView
-                                android:id="@+id/tv_fat"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="#FF5722"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Fat"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
+                            android:textSize="14sp"
+                            android:textColor="#FF5722"
+                            android:textStyle="bold"
+                            android:gravity="end"
+                            android:fontFamily="@font/poppins_semibold"/>
 
                     </LinearLayout>
 
-                    <!-- Add to log button -->
+                    <!-- Portion selector -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Portion size"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A1A"
+                        android:layout_marginBottom="8dp"
+                        android:fontFamily="@font/poppins_semibold"/>
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/portion_chips"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Small (75g)"
+                            android:textColor="@color/chip_text_selector"
+                            android:checkable="true"
+                            app:chipBackgroundColor="@drawable/chip_selector"
+                            app:chipStrokeColor="#DDDDDD"
+                            app:chipStrokeWidth="1dp"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_medium"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Medium (150g)"
+                            android:textColor="@color/chip_text_selector"
+                            android:checked="true"
+                            android:checkable="true"
+                            app:chipBackgroundColor="@drawable/chip_selector"
+                            app:chipStrokeColor="#DDDDDD"
+                            app:chipStrokeWidth="1dp"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_large"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Large (300g)"
+                            android:textColor="@color/chip_text_selector"
+                            android:checkable="true"
+                            app:chipBackgroundColor="@drawable/chip_selector"
+                            app:chipStrokeColor="#DDDDDD"
+                            app:chipStrokeWidth="1dp"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_custom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Custom"
+                            android:textColor="@color/chip_text_selector"
+                            android:checkable="true"
+                            app:chipBackgroundColor="@drawable/chip_selector"
+                            app:chipStrokeColor="#DDDDDD"
+                            app:chipStrokeWidth="1dp"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Custom grams input -->
+                    <LinearLayout
+                        android:id="@+id/custom_portion_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <EditText
+                            android:id="@+id/et_custom_grams"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:hint="100"
+                            android:inputType="number"
+                            android:textSize="14sp"
+                            android:textColor="#1A1A1A"
+                            android:textColorHint="#BDBDBD"
+                            android:background="@drawable/search_bar_bg"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:fontFamily="@font/poppins_semibold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" grams"
+                            android:textSize="14sp"
+                            android:textColor="#666666"
+                            android:layout_marginStart="8dp"
+                            android:fontFamily="@font/poppins_semibold"/>
+
+                    </LinearLayout>
+
                     <Button
                         android:id="@+id/btn_add_to_log"
                         android:layout_width="match_parent"
@@ -237,21 +332,23 @@
                         android:textSize="15sp"
                         android:backgroundTint="#1A1A1A"
                         android:textColor="#FFFFFF"
-                        app:cornerRadius="10dp"/>
+                        app:cornerRadius="10dp"
+                        android:fontFamily="@font/poppins_semibold"/>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Today's Summary Card -->
+            <!-- Today's summary -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TODAY'S LOG"
-                android:textSize="12sp"
+                android:text="TODAY'S SUMMARY"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="#9E9E9E"
                 android:letterSpacing="0.1"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_semibold"/>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -267,13 +364,12 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <!-- Total calories -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp">
 
                         <TextView
                             android:layout_width="0dp"
@@ -282,7 +378,8 @@
                             android:text="Total Calories"
                             android:textSize="15sp"
                             android:textStyle="bold"
-                            android:textColor="#1A1A1A"/>
+                            android:textColor="#1A1A1A"
+                            android:fontFamily="@font/poppins_semibold"/>
 
                         <TextView
                             android:id="@+id/tv_total_calories"
@@ -291,101 +388,34 @@
                             android:text="0 kcal"
                             android:textSize="18sp"
                             android:textStyle="bold"
-                            android:textColor="#FF9800"/>
+                            android:textColor="#FF9800"
+                            android:fontFamily="@font/poppins_semibold"/>
 
                     </LinearLayout>
 
-                    <!-- Divider -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#F0F0F0"
-                        android:layout_marginBottom="12dp"/>
-
-                    <!-- Macro summary -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tv_total_macros"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/tv_total_protein"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0g"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#4CAF50"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Protein"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/tv_total_carbs"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0g"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#2196F3"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Carbs"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/tv_total_fat"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0g"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="#FF5722"/>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Fat"
-                                android:textSize="12sp"
-                                android:textColor="#9E9E9E"/>
-                        </LinearLayout>
-
-                    </LinearLayout>
+                        android:text="P: 0g  C: 0g  F: 0g"
+                        android:textSize="13sp"
+                        android:textColor="#9E9E9E"
+                        android:fontFamily="@font/poppins_semibold"/>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Food log list -->
+            <!-- Food log -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="FOODS LOGGED"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="#9E9E9E"
                 android:letterSpacing="0.1"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_semibold"/>
 
             <LinearLayout
                 android:id="@+id/food_log_container"
@@ -393,7 +423,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"/>
 
-            <!-- Empty state -->
             <TextView
                 android:id="@+id/tv_empty_log"
                 android:layout_width="match_parent"
@@ -403,7 +432,7 @@
                 android:textColor="#BDBDBD"
                 android:gravity="center"
                 android:padding="24dp"
-                android:visibility="visible"/>
+                android:fontFamily="@font/poppins_semibold"/>
 
         </LinearLayout>
     </ScrollView>

@@ -46,10 +46,24 @@ public class DashboardFragment extends Fragment {
             tvPhysScore.setTextColor(getScoreColour(score));
         });
 
+        // Diet — real calories from database
+        repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), total -> {
+            if (total == null || total == 0) {
+                tvCalDash.setText("Log a food to see data");
+                tvDietScore.setText("—/100");
+                return;
+            }
+            tvCalDash.setText(total + " kcal logged today");
+            // Simple score calculation: assuming 2000 kcal goal
+            int score = Math.min((total * 100) / 2000, 100);
+            tvDietScore.setText(score + "/100");
+            tvDietScore.setTextColor(getScoreColour(score));
+        });
+
         // Mental — journal mood average
         repo.getAverageMoodThisWeek().observe(getViewLifecycleOwner(), avg -> {
             if (avg == null || avg == 0) {
-                tvMoodDash.setText("No entries yet this week");
+                tvMoodDash.setText("Write a journal entry");
                 tvMentalScore.setText("—/100");
                 return;
             }

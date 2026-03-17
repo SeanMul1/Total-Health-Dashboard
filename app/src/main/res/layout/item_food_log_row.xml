@@ -28,7 +28,8 @@
                 android:layout_height="wrap_content"
                 android:textSize="15sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A1A"/>
+                android:textColor="#1A1A1A"
+                android:fontFamily="@font/poppins_semibold"/>
 
             <TextView
                 android:id="@+id/tv_log_macros"
@@ -36,7 +37,8 @@
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:textColor="#9E9E9E"
-                android:layout_marginTop="2dp"/>
+                android:layout_marginTop="2dp"
+                android:fontFamily="@font/poppins_semibold"/>
 
         </LinearLayout>
 
@@ -46,7 +48,18 @@
             android:layout_height="wrap_content"
             android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#FF9800"/>
+            android:textColor="#FF9800"
+            android:fontFamily="@font/poppins_semibold"
+            android:layout_marginEnd="12dp"/>
+
+        <ImageButton
+            android:id="@+id/btn_remove_food"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#BDBDBD"
+            android:contentDescription="Remove"/>
 
     </LinearLayout>
 
