@@ -2,7 +2,6 @@ package com.totalhealthdashboard.repository;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.util.LruCache;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -16,6 +15,8 @@ import com.totalhealthdashboard.data.local.JournalDao;
 import com.totalhealthdashboard.data.local.JournalEntry;
 import com.totalhealthdashboard.data.local.NutritionDao;
 import com.totalhealthdashboard.data.local.NutritionEntry;
+import com.totalhealthdashboard.data.local.PhysicalDao;
+import com.totalhealthdashboard.data.local.PhysicalEntry;
 import com.totalhealthdashboard.data.models.FitbitData;
 import com.totalhealthdashboard.data.models.NutritionData;
 import com.totalhealthdashboard.data.remote.NutritionApiService;
@@ -36,6 +37,7 @@ public class HealthRepository {
     private static HealthRepository instance;
     private JournalDao journalDao;
     private NutritionDao nutritionDao;
+    private PhysicalDao physicalDao;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private NutritionApiService nutritionApi;
     private QuoteApiService quoteApi;
@@ -75,9 +77,9 @@ public class HealthRepository {
         AppDatabase db = AppDatabase.getInstance(context);
         journalDao = db.journalDao();
         nutritionDao = db.nutritionDao();
+        physicalDao = db.physicalDao();
         prefs = context.getSharedPreferences("health_prefs", Context.MODE_PRIVATE);
         loadFrequentFoods();
-        updateTotalsFromDb();
     }
 
     public LiveData<Integer> getTotalCalories() { return totalCalories; }
@@ -85,12 +87,6 @@ public class HealthRepository {
     public LiveData<Double> getTotalCarbs() { return totalCarbs; }
     public LiveData<Double> getTotalFat() { return totalFat; }
     public LiveData<List<NutritionData>> getFrequentFoods() { return frequentFoods; }
-
-    private void updateTotalsFromDb() {
-        executor.execute(() -> {
-            // Live updates are handled by add/remove, but initially we could sum the DB
-        });
-    }
 
     public void addFoodToLog(NutritionData data) {
         executor.execute(() -> {
@@ -219,6 +215,26 @@ public class HealthRepository {
         return nutritionDao.getTotalCaloriesToday(getStartOfDay());
     }
 
+    public LiveData<FitbitData> getFitbitData() {
+        MutableLiveData<FitbitData> data = new MutableLiveData<>();
+        physicalDao.getPhysicalEntry().observeForever(entry -> {
+            if (entry != null) {
+                data.postValue(new FitbitData(entry));
+            } else {
+                data.postValue(new FitbitData());
+            }
+        });
+        return data;
+    }
+
+    public LiveData<PhysicalEntry> getPhysicalEntry() {
+        return physicalDao.getPhysicalEntry();
+    }
+
+    public void saveManualPhysicalData(PhysicalEntry entry) {
+        executor.execute(() -> physicalDao.insertOrUpdate(entry));
+    }
+
     private long getStartOfDay() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0);
@@ -239,12 +255,6 @@ public class HealthRepository {
             @Override public void onFailure(Call<JsonArray> call, Throwable t) {}
         });
         return quoteData;
-    }
-
-    public LiveData<FitbitData> getFitbitData() {
-        MutableLiveData<FitbitData> data = new MutableLiveData<>();
-        data.setValue(new FitbitData(7542, 72, 420, 38, 7.3));
-        return data;
     }
 
     private interface QuoteApiService {

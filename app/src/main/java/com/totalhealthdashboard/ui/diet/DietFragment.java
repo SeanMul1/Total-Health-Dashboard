@@ -58,24 +58,24 @@ public class DietFragment extends Fragment {
     }
 
     private void initViews(View v) {
-        searchInput          = v.findViewById(R.id.et_food_search);
-        searchProgress       = v.findViewById(R.id.search_progress);
-        cardResult           = v.findViewById(R.id.card_search_result);
-        tvFoodName           = v.findViewById(R.id.tv_food_name);
-        tvPortionLabel       = v.findViewById(R.id.tv_portion_label);
-        tvCalories           = v.findViewById(R.id.tv_calories_big);
-        tvProtein            = v.findViewById(R.id.tv_protein);
-        tvCarbs              = v.findViewById(R.id.tv_carbs);
-        tvFat                = v.findViewById(R.id.tv_fat);
-        tvTotalCalories      = v.findViewById(R.id.tv_total_calories);
-        tvTotalMacros        = v.findViewById(R.id.tv_total_macros);
-        tvEmptyLog           = v.findViewById(R.id.tv_empty_log);
-        tvFrequentLabel      = v.findViewById(R.id.tv_frequent_label);
-        foodLogContainer     = v.findViewById(R.id.food_log_container);
-        portionChips         = v.findViewById(R.id.portion_chips);
-        frequentChips        = v.findViewById(R.id.frequent_chips);
+        searchInput            = v.findViewById(R.id.et_food_search);
+        searchProgress         = v.findViewById(R.id.search_progress);
+        cardResult             = v.findViewById(R.id.card_search_result);
+        tvFoodName             = v.findViewById(R.id.tv_food_name);
+        tvPortionLabel         = v.findViewById(R.id.tv_portion_label);
+        tvCalories             = v.findViewById(R.id.tv_calories_big);
+        tvProtein              = v.findViewById(R.id.tv_protein);
+        tvCarbs                = v.findViewById(R.id.tv_carbs);
+        tvFat                  = v.findViewById(R.id.tv_fat);
+        tvTotalCalories        = v.findViewById(R.id.tv_total_calories);
+        tvTotalMacros          = v.findViewById(R.id.tv_total_macros);
+        tvEmptyLog             = v.findViewById(R.id.tv_empty_log);
+        tvFrequentLabel        = v.findViewById(R.id.tv_frequent_label);
+        foodLogContainer       = v.findViewById(R.id.food_log_container);
+        portionChips           = v.findViewById(R.id.portion_chips);
+        frequentChips          = v.findViewById(R.id.frequent_chips);
         customPortionContainer = v.findViewById(R.id.custom_portion_container);
-        etCustomGrams        = v.findViewById(R.id.et_custom_grams);
+        etCustomGrams          = v.findViewById(R.id.et_custom_grams);
 
         // Search button
         v.findViewById(R.id.btn_search).setOnClickListener(v2 -> triggerSearch());
@@ -89,19 +89,34 @@ public class DietFragment extends Fragment {
             return false;
         });
 
-        // Add to log
+        // Add to log — re-reads custom grams at save time
         v.findViewById(R.id.btn_add_to_log).setOnClickListener(v2 -> {
-            if (adjustedNutrition != null) {
-                repo.addFoodToLog(adjustedNutrition);
-                cardResult.setVisibility(View.GONE);
-                searchInput.setText("");
-                Toast.makeText(getContext(), "Added to log ✓", Toast.LENGTH_SHORT).show();
+            if (adjustedNutrition == null) return;
+
+            // If custom chip selected, re-read the input box at save time
+            if (portionChips.getCheckedChipId() == R.id.chip_custom) {
+                String customText = etCustomGrams.getText().toString().trim();
+                if (!customText.isEmpty()) {
+                    try {
+                        currentPortionGrams = Double.parseDouble(customText);
+                        updateAdjustedNutrition();
+                    } catch (NumberFormatException ignored) {}
+                }
             }
+
+            repo.addFoodToLog(adjustedNutrition);
+            cardResult.setVisibility(View.GONE);
+            searchInput.setText("");
+            Toast.makeText(getContext(), "Added to log ✓", Toast.LENGTH_SHORT).show();
         });
 
-        // Portion selector
+        // Portion selector — only fires after a food is selected
         portionChips.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
+
+            // Don't update if no food is selected yet
+            if (baseNutrition == null) return;
+
             int id = checkedIds.get(0);
             if (id == R.id.chip_small) {
                 currentPortionGrams = 75;
@@ -116,7 +131,7 @@ public class DietFragment extends Fragment {
                 customPortionContainer.setVisibility(View.VISIBLE);
                 try {
                     currentPortionGrams = Double.parseDouble(
-                        etCustomGrams.getText().toString());
+                            etCustomGrams.getText().toString());
                 } catch (Exception e) {
                     currentPortionGrams = 100;
                     etCustomGrams.setText("100");
@@ -125,6 +140,7 @@ public class DietFragment extends Fragment {
             updateAdjustedNutrition();
         });
 
+        // Custom grams keyboard done action
         etCustomGrams.setOnEditorActionListener((tv, actionId, event) -> {
             try {
                 currentPortionGrams = Double.parseDouble(tv.getText().toString());
@@ -143,7 +159,7 @@ public class DietFragment extends Fragment {
 
         // Hide keyboard
         InputMethodManager imm = (InputMethodManager)
-            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(searchInput.getWindowToken(), 0);
 
         searchProgress.setVisibility(View.VISIBLE);
@@ -152,41 +168,50 @@ public class DietFragment extends Fragment {
         repo.searchFood(query).observe(getViewLifecycleOwner(), data -> {
             searchProgress.setVisibility(View.GONE);
             if (data != null) {
-                baseNutrition = data;
-                portionChips.check(R.id.chip_medium);
-                currentPortionGrams = 150;
-                updateAdjustedNutrition();
-                tvFoodName.setText(data.getFoodName());
-                cardResult.setVisibility(View.VISIBLE);
+                selectFood(data);
             } else {
                 Toast.makeText(getContext(),
-                    "Nothing found — try a different term",
-                    Toast.LENGTH_SHORT).show();
+                        "Nothing found — try a different term",
+                        Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    // Central method for selecting a food — used by search and frequent chips
+    private void selectFood(NutritionData data) {
+        baseNutrition = data;
+        currentPortionGrams = 150;
+        portionChips.check(R.id.chip_medium);
+        customPortionContainer.setVisibility(View.GONE);
+        updateAdjustedNutrition();
+        tvFoodName.setText(data.getFoodName());
+        cardResult.setVisibility(View.VISIBLE);
     }
 
     private void updateAdjustedNutrition() {
         if (baseNutrition == null) return;
         double factor = currentPortionGrams / 100.0;
         adjustedNutrition = new NutritionData(
-            baseNutrition.getFoodName(),
-            (int)(baseNutrition.getCalories() * factor),
-            baseNutrition.getProtein() * factor,
-            baseNutrition.getCarbs() * factor,
-            baseNutrition.getFat() * factor,
-            baseNutrition.getImageUrl()
+                baseNutrition.getFoodName(),
+                (int)(baseNutrition.getCalories() * factor),
+                baseNutrition.getProtein() * factor,
+                baseNutrition.getCarbs() * factor,
+                baseNutrition.getFat() * factor,
+                baseNutrition.getImageUrl()
         );
         tvCalories.setText(adjustedNutrition.getCalories() + " kcal");
-        tvProtein.setText(String.format(Locale.getDefault(), "P: %.1fg", adjustedNutrition.getProtein()));
-        tvCarbs.setText(String.format(Locale.getDefault(), "C: %.1fg", adjustedNutrition.getCarbs()));
-        tvFat.setText(String.format(Locale.getDefault(), "F: %.1fg", adjustedNutrition.getFat()));
+        tvProtein.setText(String.format(Locale.getDefault(),
+                "P: %.1fg", adjustedNutrition.getProtein()));
+        tvCarbs.setText(String.format(Locale.getDefault(),
+                "C: %.1fg", adjustedNutrition.getCarbs()));
+        tvFat.setText(String.format(Locale.getDefault(),
+                "F: %.1fg", adjustedNutrition.getFat()));
         tvPortionLabel.setText("per " + (int)currentPortionGrams + "g");
     }
 
     private void observeData() {
         repo.getTotalCalories().observe(getViewLifecycleOwner(), total ->
-            tvTotalCalories.setText((total != null ? total : 0) + " kcal"));
+                tvTotalCalories.setText((total != null ? total : 0) + " kcal"));
 
         repo.getTotalProtein().observe(getViewLifecycleOwner(), p -> updateMacroSummary());
         repo.getTotalCarbs().observe(getViewLifecycleOwner(), c -> updateMacroSummary());
@@ -209,14 +234,7 @@ public class DietFragment extends Fragment {
                 for (NutritionData food : foods) {
                     Chip chip = new Chip(requireContext());
                     chip.setText(food.getFoodName());
-                    chip.setOnClickListener(v -> {
-                        baseNutrition = food;
-                        portionChips.check(R.id.chip_medium);
-                        currentPortionGrams = 150;
-                        updateAdjustedNutrition();
-                        tvFoodName.setText(food.getFoodName());
-                        cardResult.setVisibility(View.VISIBLE);
-                    });
+                    chip.setOnClickListener(v -> selectFood(food));
                     frequentChips.addView(chip);
                 }
             } else {
@@ -230,18 +248,18 @@ public class DietFragment extends Fragment {
         double c = repo.getTotalCarbs().getValue() != null ? repo.getTotalCarbs().getValue() : 0;
         double f = repo.getTotalFat().getValue() != null ? repo.getTotalFat().getValue() : 0;
         tvTotalMacros.setText(String.format(Locale.getDefault(),
-            "P: %.0fg  C: %.0fg  F: %.0fg", p, c, f));
+                "P: %.0fg  C: %.0fg  F: %.0fg", p, c, f));
     }
 
     private void addLogRow(NutritionEntry entry) {
         View row = LayoutInflater.from(getContext())
-            .inflate(R.layout.item_food_log_row, foodLogContainer, false);
+                .inflate(R.layout.item_food_log_row, foodLogContainer, false);
         ((TextView) row.findViewById(R.id.tv_log_food_name)).setText(entry.foodName);
         ((TextView) row.findViewById(R.id.tv_log_calories)).setText(entry.calories + " kcal");
         ((TextView) row.findViewById(R.id.tv_log_macros)).setText(
-            String.format(Locale.getDefault(),
-                "P: %.0fg  C: %.0fg  F: %.0fg",
-                entry.protein, entry.carbs, entry.fat));
+                String.format(Locale.getDefault(),
+                        "P: %.0fg  C: %.0fg  F: %.0fg",
+                        entry.protein, entry.carbs, entry.fat));
         row.findViewById(R.id.btn_remove_food).setOnClickListener(v -> {
             repo.removeFoodFromLog(entry);
             Toast.makeText(getContext(), entry.foodName + " removed", Toast.LENGTH_SHORT).show();
