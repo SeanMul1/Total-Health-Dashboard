@@ -344,6 +344,38 @@
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/poppins_semibold"/>
 
+            <!-- Google users will see the option to set a password -->
+            <TextView
+                android:id="@+id/btn_set_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Set a password for email login"
+                android:textSize="13sp"
+                android:textColor="#2196F3"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:padding="8dp"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:fontFamily="@font/poppins_semibold"/>
+
+            <!-- Logout -->
+            <TextView
+                android:id="@+id/btn_logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Log out"
+                android:textSize="13sp"
+                android:textColor="#9E9E9E"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:padding="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:fontFamily="@font/poppins_semibold"/>
+
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
