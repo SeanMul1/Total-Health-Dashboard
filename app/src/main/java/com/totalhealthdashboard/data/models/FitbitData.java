@@ -35,24 +35,24 @@ public class FitbitData {
 
     // Default synthetic constructor
     public FitbitData() {
-        this.steps = 7542;
-        this.distanceKm = 5.4;
-        this.caloriesBurned = 420;
-        this.activeMinutes = 38;
+        this.steps = 0;
+        this.distanceKm = 0;
+        this.caloriesBurned = 0;
+        this.activeMinutes = 0;
         // this.floorsClimbed = 12;
-        this.heartRate = 72;
+        this.heartRate = 60;
         // this.fatBurnMinutes = 25;
         // this.cardioMinutes = 10;
         // this.peakMinutes = 3;
         // this.vo2Max = 42;
-        this.sleepHours = 7.3;
-        this.sleepScore = 7;
+        this.sleepHours = 0;
+        this.sleepScore = 0;
         // this.sleepDeepMinutes = 62;
         // this.sleepRemMinutes = 94;
         // this.sleepLightMinutes = 212;
         // this.sleepAwakeMinutes = 18;
         // this.spo2 = 97;
-        this.stressScore = 4;
+        this.stressScore = 0;
         // this.breathingRate = 15;
         // this.skinTempVariation = 0.2;
         // this.hrv = 45;

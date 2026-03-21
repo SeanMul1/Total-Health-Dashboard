@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 import android.util.LruCache;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.totalhealthdashboard.data.local.AppDatabase;
@@ -49,10 +49,11 @@ public class HealthRepository {
 
     private final LruCache<String, NutritionData> searchCache = new LruCache<>(10);
     private final MutableLiveData<Integer> totalCalories = new MutableLiveData<>(0);
-    private final MutableLiveData<Double> totalProtein = new MutableLiveData<>(0.0);
-    private final MutableLiveData<Double> totalCarbs = new MutableLiveData<>(0.0);
-    private final MutableLiveData<Double> totalFat = new MutableLiveData<>(0.0);
-    private final MutableLiveData<List<NutritionData>> frequentFoods = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<Double> totalProtein   = new MutableLiveData<>(0.0);
+    private final MutableLiveData<Double> totalCarbs     = new MutableLiveData<>(0.0);
+    private final MutableLiveData<Double> totalFat       = new MutableLiveData<>(0.0);
+    private final MutableLiveData<List<NutritionData>> frequentFoods =
+            new MutableLiveData<>(new ArrayList<>());
 
     private SharedPreferences prefs;
     private final Gson gson = new Gson();
@@ -78,35 +79,49 @@ public class HealthRepository {
         return instance;
     }
 
+    // Returns current Firebase UID — never null safe fallback to "anonymous"
+    private String uid() {
+        com.google.firebase.auth.FirebaseUser user =
+                FirebaseAuth.getInstance().getCurrentUser();
+        return user != null ? user.getUid() : "anonymous";
+    }
+
     public void init(Context context) {
         AppDatabase db = AppDatabase.getInstance(context);
         journalDao   = db.journalDao();
         nutritionDao = db.nutritionDao();
         physicalDao  = db.physicalDao();
         userGoalsDao = db.userGoalsDao();
-        prefs = context.getSharedPreferences("health_prefs", Context.MODE_PRIVATE);
+        prefs = context.getSharedPreferences("health_prefs_" + uid(),
+                Context.MODE_PRIVATE);
         loadFrequentFoods();
     }
 
-    // ─── Nutrition totals ────────────────────────────────────────────────────
+    // ─── Nutrition totals ─────────────────────────────────────────────────────
     public LiveData<Integer> getTotalCalories() { return totalCalories; }
     public LiveData<Double> getTotalProtein()   { return totalProtein; }
     public LiveData<Double> getTotalCarbs()     { return totalCarbs; }
     public LiveData<Double> getTotalFat()       { return totalFat; }
     public LiveData<List<NutritionData>> getFrequentFoods() { return frequentFoods; }
 
-    // ─── Food log ────────────────────────────────────────────────────────────
+    // ─── Food log ─────────────────────────────────────────────────────────────
     public void addFoodToLog(NutritionData data) {
+        String userId = uid();
         executor.execute(() -> {
             NutritionEntry entry = new NutritionEntry(
-                    data.getFoodName(), data.getCalories(), data.getProtein(),
-                    data.getCarbs(), data.getFat(), System.currentTimeMillis()
+                    userId, data.getFoodName(), data.getCalories(),
+                    data.getProtein(), data.getCarbs(), data.getFat(),
+                    System.currentTimeMillis()
             );
             nutritionDao.insert(entry);
-            totalCalories.postValue((totalCalories.getValue() != null ? totalCalories.getValue() : 0) + data.getCalories());
-            totalProtein.postValue((totalProtein.getValue() != null ? totalProtein.getValue() : 0.0) + data.getProtein());
-            totalCarbs.postValue((totalCarbs.getValue() != null ? totalCarbs.getValue() : 0.0) + data.getCarbs());
-            totalFat.postValue((totalFat.getValue() != null ? totalFat.getValue() : 0.0) + data.getFat());
+            totalCalories.postValue((totalCalories.getValue() != null
+                    ? totalCalories.getValue() : 0) + data.getCalories());
+            totalProtein.postValue((totalProtein.getValue() != null
+                    ? totalProtein.getValue() : 0.0) + data.getProtein());
+            totalCarbs.postValue((totalCarbs.getValue() != null
+                    ? totalCarbs.getValue() : 0.0) + data.getCarbs());
+            totalFat.postValue((totalFat.getValue() != null
+                    ? totalFat.getValue() : 0.0) + data.getFat());
             saveToFrequent(data);
         });
     }
@@ -114,10 +129,18 @@ public class HealthRepository {
     public void removeFoodFromLog(NutritionEntry entry) {
         executor.execute(() -> {
             nutritionDao.delete(entry);
-            totalCalories.postValue(Math.max(0, (totalCalories.getValue() != null ? totalCalories.getValue() : 0) - entry.calories));
-            totalProtein.postValue(Math.max(0.0, (totalProtein.getValue() != null ? totalProtein.getValue() : 0.0) - entry.protein));
-            totalCarbs.postValue(Math.max(0.0, (totalCarbs.getValue() != null ? totalCarbs.getValue() : 0.0) - entry.carbs));
-            totalFat.postValue(Math.max(0.0, (totalFat.getValue() != null ? totalFat.getValue() : 0.0) - entry.fat));
+            totalCalories.postValue(Math.max(0,
+                    (totalCalories.getValue() != null ? totalCalories.getValue() : 0)
+                            - entry.calories));
+            totalProtein.postValue(Math.max(0.0,
+                    (totalProtein.getValue() != null ? totalProtein.getValue() : 0.0)
+                            - entry.protein));
+            totalCarbs.postValue(Math.max(0.0,
+                    (totalCarbs.getValue() != null ? totalCarbs.getValue() : 0.0)
+                            - entry.carbs));
+            totalFat.postValue(Math.max(0.0,
+                    (totalFat.getValue() != null ? totalFat.getValue() : 0.0)
+                            - entry.fat));
         });
     }
 
@@ -139,7 +162,7 @@ public class HealthRepository {
         frequentFoods.postValue(new ArrayList<>(list.subList(0, Math.min(list.size(), 5))));
     }
 
-    // ─── Food search ─────────────────────────────────────────────────────────
+    // ─── Food search ──────────────────────────────────────────────────────────
     public LiveData<NutritionData> searchFood(String query) {
         MutableLiveData<NutritionData> data = new MutableLiveData<>();
         String cleanQuery = query.toLowerCase().trim();
@@ -155,18 +178,25 @@ public class HealthRepository {
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
-                        JsonArray products = response.body().getAsJsonArray("products");
+                        com.google.gson.JsonArray products =
+                                response.body().getAsJsonArray("products");
                         if (products != null && products.size() > 0) {
                             for (int i = 0; i < products.size(); i++) {
                                 JsonObject p = products.get(i).getAsJsonObject();
                                 if (!p.has("nutriments")) continue;
                                 JsonObject n = p.getAsJsonObject("nutriments");
                                 if (!n.has("energy-kcal_100g") && !n.has("energy_100g")) continue;
-                                String name = p.has("product_name") ? p.get("product_name").getAsString() : query;
-                                int cal = n.has("energy-kcal_100g") ? n.get("energy-kcal_100g").getAsInt() : (int)(n.get("energy_100g").getAsDouble() / 4.184);
-                                double prot = n.has("proteins_100g") ? n.get("proteins_100g").getAsDouble() : 0;
-                                double carb = n.has("carbohydrates_100g") ? n.get("carbohydrates_100g").getAsDouble() : 0;
-                                double fat = n.has("fat_100g") ? n.get("fat_100g").getAsDouble() : 0;
+                                String name = p.has("product_name")
+                                        ? p.get("product_name").getAsString() : query;
+                                int cal = n.has("energy-kcal_100g")
+                                        ? n.get("energy-kcal_100g").getAsInt()
+                                        : (int)(n.get("energy_100g").getAsDouble() / 4.184);
+                                double prot = n.has("proteins_100g")
+                                        ? n.get("proteins_100g").getAsDouble() : 0;
+                                double carb = n.has("carbohydrates_100g")
+                                        ? n.get("carbohydrates_100g").getAsDouble() : 0;
+                                double fat = n.has("fat_100g")
+                                        ? n.get("fat_100g").getAsDouble() : 0;
                                 NutritionData result = new NutritionData(name, cal, prot, carb, fat);
                                 searchCache.put(cleanQuery, result);
                                 data.postValue(result);
@@ -195,39 +225,43 @@ public class HealthRepository {
         return new NutritionData(query + " (est.)", 150, 8, 20, 5);
     }
 
-    // ─── Journal ─────────────────────────────────────────────────────────────
+    // ─── Journal ──────────────────────────────────────────────────────────────
     public void saveJournalEntry(String content, int moodScore) {
+        String userId = uid();
         executor.execute(() -> {
-            JournalEntry entry = new JournalEntry(content, System.currentTimeMillis(), moodScore);
+            JournalEntry entry = new JournalEntry(
+                    userId, content, System.currentTimeMillis(), moodScore);
             journalDao.insert(entry);
         });
     }
 
     public LiveData<Integer> getEntryCountThisWeek() {
-        return journalDao.getEntryCountThisWeek(System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L));
+        return journalDao.getEntryCountThisWeek(uid(),
+                System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L));
     }
 
     public LiveData<Float> getAverageMoodThisWeek() {
-        return journalDao.getAverageMoodThisWeek(System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L));
+        return journalDao.getAverageMoodThisWeek(uid(),
+                System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L));
     }
 
     public LiveData<JournalEntry> getLatestEntry() {
-        return journalDao.getLatestEntry();
+        return journalDao.getLatestEntry(uid());
     }
 
     // ─── Nutrition entries ────────────────────────────────────────────────────
     public LiveData<List<NutritionEntry>> getNutritionEntriesForToday() {
-        return nutritionDao.getEntriesForToday(getStartOfDay());
+        return nutritionDao.getEntriesForToday(uid(), getStartOfDay());
     }
 
     public LiveData<Integer> getTotalCaloriesToday() {
-        return nutritionDao.getTotalCaloriesToday(getStartOfDay());
+        return nutritionDao.getTotalCaloriesToday(uid(), getStartOfDay());
     }
 
-    // ─── Physical ────────────────────────────────────────────────────────────
+    // ─── Physical ─────────────────────────────────────────────────────────────
     public LiveData<FitbitData> getFitbitData() {
         MutableLiveData<FitbitData> data = new MutableLiveData<>();
-        physicalDao.getPhysicalEntry().observeForever(entry -> {
+        physicalDao.getPhysicalEntry(uid()).observeForever(entry -> {
             if (entry != null) {
                 data.postValue(new FitbitData(entry));
             } else {
@@ -238,26 +272,27 @@ public class HealthRepository {
     }
 
     public LiveData<PhysicalEntry> getPhysicalEntry() {
-        return physicalDao.getPhysicalEntry();
+        return physicalDao.getPhysicalEntry(uid());
     }
 
     public void saveManualPhysicalData(PhysicalEntry entry) {
+        entry.userId = uid();
         executor.execute(() -> physicalDao.insertOrUpdate(entry));
     }
 
-    // ─── Goals ───────────────────────────────────────────────────────────────
+    // ─── Goals ────────────────────────────────────────────────────────────────
     public LiveData<UserGoals> getUserGoals() {
-        return userGoalsDao.getGoals();
+        return userGoalsDao.getGoals(uid());
     }
 
     public void saveGoals(UserGoals goals) {
+        goals.userId = uid();
         executor.execute(() -> userGoalsDao.insertOrUpdate(goals));
     }
 
-    // Check if goals have ever been saved — used to decide whether to show onboarding
-    // Must be called off the main thread
     public boolean hasGoalsBeenSet(Context context) {
-        return AppDatabase.getInstance(context).userGoalsDao().getGoalsSync() != null;
+        return AppDatabase.getInstance(context)
+                .userGoalsDao().getGoalsSync(uid()) != null;
     }
 
     // ─── Wellness quote ───────────────────────────────────────────────────────
@@ -278,7 +313,7 @@ public class HealthRepository {
         return quoteData;
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    // ─── Helpers ──────────────────────────────────────────────────────────────
     private long getStartOfDay() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0);

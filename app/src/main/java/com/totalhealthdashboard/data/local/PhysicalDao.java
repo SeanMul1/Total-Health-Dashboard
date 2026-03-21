@@ -8,9 +8,10 @@ import androidx.room.Query;
 
 @Dao
 public interface PhysicalDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdate(PhysicalEntry entry);
 
-    @Query("SELECT * FROM physical_entries WHERE id = 1 LIMIT 1")
-    LiveData<PhysicalEntry> getPhysicalEntry();
+    @Query("SELECT * FROM physical_entries WHERE userId = :userId")
+    LiveData<PhysicalEntry> getPhysicalEntry(String userId);
 }

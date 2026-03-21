@@ -9,12 +9,14 @@ public class JournalEntry {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
+    public String userId;
     public String content;
     public long timestamp;
-    public int moodScore; // calculated on save
+    public int moodScore;
 
-    public JournalEntry(String content, long timestamp, int moodScore) {
-        this.content = content;
+    public JournalEntry(String userId, String content, long timestamp, int moodScore) {
+        this.userId    = userId;
+        this.content   = content;
         this.timestamp = timestamp;
         this.moodScore = moodScore;
     }

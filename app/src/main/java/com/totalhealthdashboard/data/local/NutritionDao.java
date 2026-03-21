@@ -9,15 +9,16 @@ import java.util.List;
 
 @Dao
 public interface NutritionDao {
+
     @Insert
     void insert(NutritionEntry entry);
 
     @Delete
     void delete(NutritionEntry entry);
 
-    @Query("SELECT * FROM nutrition_entries WHERE timestamp >= :startOfDay ORDER BY timestamp DESC")
-    LiveData<List<NutritionEntry>> getEntriesForToday(long startOfDay);
+    @Query("SELECT * FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay ORDER BY timestamp DESC")
+    LiveData<List<NutritionEntry>> getEntriesForToday(String userId, long startOfDay);
 
-    @Query("SELECT SUM(calories) FROM nutrition_entries WHERE timestamp >= :startOfDay")
-    LiveData<Integer> getTotalCaloriesToday(long startOfDay);
+    @Query("SELECT SUM(calories) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    LiveData<Integer> getTotalCaloriesToday(String userId, long startOfDay);
 }

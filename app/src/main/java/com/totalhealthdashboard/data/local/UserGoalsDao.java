@@ -12,9 +12,9 @@ public interface UserGoalsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrUpdate(UserGoals goals);
 
-    @Query("SELECT * FROM user_goals WHERE id = 1")
-    LiveData<UserGoals> getGoals();
+    @Query("SELECT * FROM user_goals WHERE userId = :userId")
+    LiveData<UserGoals> getGoals(String userId);
 
-    @Query("SELECT * FROM user_goals WHERE id = 1")
-    UserGoals getGoalsSync();
+    @Query("SELECT * FROM user_goals WHERE userId = :userId")
+    UserGoals getGoalsSync(String userId);
 }

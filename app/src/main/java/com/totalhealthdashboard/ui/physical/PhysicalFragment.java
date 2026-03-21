@@ -63,40 +63,47 @@ public class PhysicalFragment extends Fragment {
         repo.getFitbitData().observe(getViewLifecycleOwner(), data -> {
             if (data == null) return;
 
-            // Activity
+            // Activity — show — when no data entered yet
             int steps = data.getSteps();
             int pct = Math.min((steps * 100) / 10000, 100);
-            tvSteps.setText(String.format("%,d", steps));
+            tvSteps.setText(steps == 0 ? "—" : String.format("%,d", steps));
             progress.setProgress(pct);
-            tvStepsPct.setText(pct + "% of daily goal");
-            tvDistance.setText(String.format(Locale.getDefault(), "%.1f km", data.getDistanceKm()));
-            tvCalories.setText(String.valueOf(data.getCaloriesBurned()));
-            tvActive.setText(String.valueOf(data.getActiveMinutes()));
+            tvStepsPct.setText(steps == 0 ? "No data yet" : pct + "% of daily goal");
+            tvDistance.setText(data.getDistanceKm() == 0 ? "—"
+                    : String.format(Locale.getDefault(), "%.1f km", data.getDistanceKm()));
+            tvCalories.setText(data.getCaloriesBurned() == 0 ? "—"
+                    : String.valueOf(data.getCaloriesBurned()));
+            tvActive.setText(data.getActiveMinutes() == 0 ? "—"
+                    : String.valueOf(data.getActiveMinutes()));
             // FUTURE: tvFloors.setText(String.valueOf(data.getFloorsClimbed()));
 
             // Heart
-            tvHR.setText(data.getHeartRate() + " bpm");
+            tvHR.setText(data.getHeartRate() == 0 ? "—"
+                    : data.getHeartRate() + " bpm");
             // FUTURE: tvFatBurn.setText(String.valueOf(data.getFatBurnMinutes()));
             // FUTURE: tvCardio.setText(String.valueOf(data.getCardioMinutes()));
             // FUTURE: tvPeak.setText(String.valueOf(data.getPeakMinutes()));
             // FUTURE: tvVo2.setText(String.valueOf(data.getVo2Max()));
 
             // Sleep
-            tvSleep.setText(String.valueOf(data.getSleepHours()));
-            tvSleepScore.setText(String.valueOf(data.getSleepScore()));
+            tvSleep.setText(data.getSleepHours() == 0 ? "—"
+                    : String.valueOf(data.getSleepHours()));
+            tvSleepScore.setText(data.getSleepScore() == 0 ? "—"
+                    : String.valueOf(data.getSleepScore()));
             // FUTURE: int sleepMins = (int)(data.getSleepHours() * 60);
             // FUTURE: tvSleep.setText(sleepMins / 60 + "h " + sleepMins % 60 + "m");
-            // FUTURE: tvDeep.setText(String.valueOf(data.getSleepDeepMinutes()));
-            // FUTURE: tvRem.setText(String.valueOf(data.getSleepRemMinutes()));
-            // FUTURE: tvLight.setText(String.valueOf(data.getSleepLightMinutes()));
-            // FUTURE: tvAwake.setText(String.valueOf(data.getSleepAwakeMinutes()));
 
-            // Wellness
+            // Wellness — stress
             int stress = data.getStressScore();
-            tvStress.setText(stress + "/10");
-            if (stress >= 7) tvStress.setTextColor(0xFF4CAF50);
-            else if (stress >= 4) tvStress.setTextColor(0xFFFF9800);
-            else tvStress.setTextColor(0xFFF44336);
+            if (stress == 0) {
+                tvStress.setText("—");
+                tvStress.setTextColor(0xFF9E9E9E);
+            } else {
+                tvStress.setText(stress + "/10");
+                if (stress >= 7) tvStress.setTextColor(0xFF4CAF50);
+                else if (stress >= 4) tvStress.setTextColor(0xFFFF9800);
+                else tvStress.setTextColor(0xFFF44336);
+            }
             // FUTURE: tvSpo2.setText(String.valueOf(data.getSpo2()));
             // FUTURE: tvHrv.setText(String.valueOf(data.getHrv()));
             // FUTURE: tvBreathing.setText(String.valueOf(data.getBreathingRate()));
@@ -104,13 +111,14 @@ public class PhysicalFragment extends Fragment {
             //         String.format(Locale.getDefault(), "%.1f", data.getSkinTempVariation()));
         });
 
+        // Data source badge
         repo.getPhysicalEntry().observe(getViewLifecycleOwner(), entry -> {
             if (entry != null) {
                 tvDataSource.setText("  ✓ MANUALLY ENTERED DATA  ");
                 tvDataSource.setTextColor(0xFF4CAF50);
             } else {
-                tvDataSource.setText("  FITBIT SYNTHETIC DATA — DEMO MODE  ");
-                tvDataSource.setTextColor(0xFF00B0B9);
+                tvDataSource.setText("  NO DATA ENTERED YET  ");
+                tvDataSource.setTextColor(0xFF9E9E9E);
             }
         });
 
@@ -141,13 +149,13 @@ public class PhysicalFragment extends Fragment {
         EditText etCal    = addField(layout, "🔥 Calories Burned", "e.g. 420  ·  light day ~300, active ~600+", false);
         EditText etActive = addField(layout, "⏱️ Active Minutes", "e.g. 45  ·  WHO recommends 30 min/day", false);
 
-        // FUTURE: floors field — uncomment when floorsClimbed added to PhysicalEntry
+        // FUTURE: floors field
         // EditText etFloors = addField(layout, "🏢 Floors Climbed", "e.g. 12  ·  each floor ~3 metres", false);
 
         addSectionHeader(layout, "HEART");
         EditText etHR = addField(layout, "❤️ Resting Heart Rate (bpm)", "e.g. 72  ·  normal: 60–100 bpm", false);
 
-        // FUTURE: HR zone fields — uncomment when added to PhysicalEntry
+        // FUTURE: HR zone fields
         // EditText etFatBurn = addField(layout, "🟡 Fat Burn Zone (min)", "e.g. 25  ·  light-moderate exercise", false);
         // EditText etCardio  = addField(layout, "🔴 Cardio Zone (min)", "e.g. 10  ·  vigorous exercise", false);
         // EditText etPeak    = addField(layout, "🟣 Peak Zone (min)", "e.g. 3  ·  max effort exercise", false);
@@ -156,12 +164,8 @@ public class PhysicalFragment extends Fragment {
         addSectionHeader(layout, "SLEEP");
         EditText etSleepH = addField(layout, "😴 Hours Slept", "e.g. 7.5  ·  recommended: 7–9 hours", true);
 
-        // FUTURE: detailed sleep fields — uncomment when added to PhysicalEntry
+        // FUTURE: detailed sleep fields
         // EditText etSleepSc = addField(layout, "📊 Sleep Score (0-100)", "e.g. 78  ·  good sleep: 80+", false);
-        // EditText etDeep    = addField(layout, "🔵 Deep Sleep (min)", "e.g. 62  ·  aim for 60–90 min", false);
-        // EditText etRem     = addField(layout, "🟣 REM Sleep (min)", "e.g. 94  ·  aim for 90–120 min", false);
-        // EditText etLight   = addField(layout, "💙 Light Sleep (min)", "e.g. 212  ·  largest sleep stage", false);
-        // EditText etAwake   = addField(layout, "⚪ Awake (min)", "e.g. 18  ·  normal: under 30 min", false);
 
         // Sleep quality slider (1-10)
         addSectionHeader(layout, "WELLNESS");
@@ -240,37 +244,23 @@ public class PhysicalFragment extends Fragment {
         });
         layout.addView(sbStress);
 
-        // FUTURE: wellness fields — uncomment when added to PhysicalEntry
+        // FUTURE: wellness fields
         // EditText etSpo2     = addField(layout, "🫁 SpO2 — Blood Oxygen (%)", "e.g. 97  ·  normal: 95–100%", false);
         // EditText etHrv      = addField(layout, "💓 HRV (ms)", "e.g. 45  ·  higher = better recovery", false);
         // EditText etBreath   = addField(layout, "🌬️ Breathing Rate (br/min)", "e.g. 15  ·  normal: 12–20 br/min", false);
         // EditText etSkinTemp = addField(layout, "🌡️ Skin Temp Variation (°C)", "e.g. 0.2  ·  normal: -0.5 to +0.5", true);
 
-        // Pre-fill with saved values
+        // Pre-fill with saved values if they exist
         repo.getPhysicalEntry().observe(getViewLifecycleOwner(), entry -> {
             if (entry != null) {
-                etSteps.setText(String.valueOf(entry.steps));
-                etDist.setText(String.valueOf(entry.distanceKm));
-                etCal.setText(String.valueOf(entry.caloriesBurned));
-                etActive.setText(String.valueOf(entry.activeMinutes));
-                etHR.setText(String.valueOf(entry.heartRate));
-                etSleepH.setText(String.valueOf(entry.sleepHours));
-                sbSleep.setProgress(entry.sleepScore - 1);
-                sbStress.setProgress(entry.stressScore - 1);
-                // FUTURE: etFloors.setText(String.valueOf(entry.floorsClimbed));
-                // FUTURE: etFatBurn.setText(String.valueOf(entry.fatBurnMinutes));
-                // FUTURE: etCardio.setText(String.valueOf(entry.cardioMinutes));
-                // FUTURE: etPeak.setText(String.valueOf(entry.peakMinutes));
-                // FUTURE: etVo2.setText(String.valueOf(entry.vo2Max));
-                // FUTURE: etSleepSc.setText(String.valueOf(entry.sleepScore));
-                // FUTURE: etDeep.setText(String.valueOf(entry.sleepDeepMinutes));
-                // FUTURE: etRem.setText(String.valueOf(entry.sleepRemMinutes));
-                // FUTURE: etLight.setText(String.valueOf(entry.sleepLightMinutes));
-                // FUTURE: etAwake.setText(String.valueOf(entry.sleepAwakeMinutes));
-                // FUTURE: etSpo2.setText(String.valueOf(entry.spo2));
-                // FUTURE: etHrv.setText(String.valueOf(entry.hrv));
-                // FUTURE: etBreath.setText(String.valueOf(entry.breathingRate));
-                // FUTURE: etSkinTemp.setText(String.valueOf(entry.skinTempVariation));
+                etSteps.setText(entry.steps == 0 ? "" : String.valueOf(entry.steps));
+                etDist.setText(entry.distanceKm == 0 ? "" : String.valueOf(entry.distanceKm));
+                etCal.setText(entry.caloriesBurned == 0 ? "" : String.valueOf(entry.caloriesBurned));
+                etActive.setText(entry.activeMinutes == 0 ? "" : String.valueOf(entry.activeMinutes));
+                etHR.setText(entry.heartRate == 0 ? "" : String.valueOf(entry.heartRate));
+                etSleepH.setText(entry.sleepHours == 0 ? "" : String.valueOf(entry.sleepHours));
+                if (entry.sleepScore > 0) sbSleep.setProgress(entry.sleepScore - 1);
+                if (entry.stressScore > 0) sbStress.setProgress(entry.stressScore - 1);
             }
         });
 
@@ -307,18 +297,18 @@ public class PhysicalFragment extends Fragment {
             entry.timestamp      = System.currentTimeMillis();
 
             // FUTURE: uncomment when fields added back to PhysicalEntry
-            // entry.floorsClimbed   = parseInt(etFloors, 0);
-            // entry.fatBurnMinutes  = parseInt(etFatBurn, 0);
-            // entry.cardioMinutes   = parseInt(etCardio, 0);
-            // entry.peakMinutes     = parseInt(etPeak, 0);
-            // entry.vo2Max          = parseInt(etVo2, 0);
-            // entry.sleepDeepMinutes   = parseInt(etDeep, 0);
-            // entry.sleepRemMinutes    = parseInt(etRem, 0);
-            // entry.sleepLightMinutes  = parseInt(etLight, 0);
-            // entry.sleepAwakeMinutes  = parseInt(etAwake, 0);
-            // entry.spo2            = parseInt(etSpo2, 0);
-            // entry.hrv             = parseInt(etHrv, 0);
-            // entry.breathingRate   = parseInt(etBreath, 0);
+            // entry.floorsClimbed     = parseInt(etFloors, 0);
+            // entry.fatBurnMinutes    = parseInt(etFatBurn, 0);
+            // entry.cardioMinutes     = parseInt(etCardio, 0);
+            // entry.peakMinutes       = parseInt(etPeak, 0);
+            // entry.vo2Max            = parseInt(etVo2, 0);
+            // entry.sleepDeepMinutes  = parseInt(etDeep, 0);
+            // entry.sleepRemMinutes   = parseInt(etRem, 0);
+            // entry.sleepLightMinutes = parseInt(etLight, 0);
+            // entry.sleepAwakeMinutes = parseInt(etAwake, 0);
+            // entry.spo2              = parseInt(etSpo2, 0);
+            // entry.hrv               = parseInt(etHrv, 0);
+            // entry.breathingRate     = parseInt(etBreath, 0);
             // entry.skinTempVariation = parseDouble(etSkinTemp, 0);
 
             repo.saveManualPhysicalData(entry);
@@ -375,7 +365,9 @@ public class PhysicalFragment extends Fragment {
         et.setBackgroundColor(0xFFF0F0F0);
         et.setSingleLine(true);
         et.setInputType(isDecimal
-                ? android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL | android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
+                ? android.text.InputType.TYPE_CLASS_NUMBER
+                | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+                | android.text.InputType.TYPE_NUMBER_FLAG_SIGNED
                 : android.text.InputType.TYPE_CLASS_NUMBER);
 
         android.widget.LinearLayout.LayoutParams p =
