@@ -17,6 +17,8 @@ import com.totalhealthdashboard.data.local.NutritionDao;
 import com.totalhealthdashboard.data.local.NutritionEntry;
 import com.totalhealthdashboard.data.local.PhysicalDao;
 import com.totalhealthdashboard.data.local.PhysicalEntry;
+import com.totalhealthdashboard.data.local.UserGoals;
+import com.totalhealthdashboard.data.local.UserGoalsDao;
 import com.totalhealthdashboard.data.models.FitbitData;
 import com.totalhealthdashboard.data.models.NutritionData;
 import com.totalhealthdashboard.data.remote.NutritionApiService;
@@ -34,10 +36,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 
 public class HealthRepository {
+
     private static HealthRepository instance;
     private JournalDao journalDao;
     private NutritionDao nutritionDao;
     private PhysicalDao physicalDao;
+    private UserGoalsDao userGoalsDao;
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private NutritionApiService nutritionApi;
     private QuoteApiService quoteApi;
@@ -54,15 +59,15 @@ public class HealthRepository {
 
     private HealthRepository() {
         Retrofit nutritionRetrofit = new Retrofit.Builder()
-            .baseUrl("https://world.openfoodfacts.org/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
+                .baseUrl("https://world.openfoodfacts.org/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
         nutritionApi = nutritionRetrofit.create(NutritionApiService.class);
 
         Retrofit quoteRetrofit = new Retrofit.Builder()
-            .baseUrl("https://zenquotes.io/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
+                .baseUrl("https://zenquotes.io/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
         quoteApi = quoteRetrofit.create(QuoteApiService.class);
     }
 
@@ -75,32 +80,33 @@ public class HealthRepository {
 
     public void init(Context context) {
         AppDatabase db = AppDatabase.getInstance(context);
-        journalDao = db.journalDao();
+        journalDao   = db.journalDao();
         nutritionDao = db.nutritionDao();
-        physicalDao = db.physicalDao();
+        physicalDao  = db.physicalDao();
+        userGoalsDao = db.userGoalsDao();
         prefs = context.getSharedPreferences("health_prefs", Context.MODE_PRIVATE);
         loadFrequentFoods();
     }
 
+    // ─── Nutrition totals ────────────────────────────────────────────────────
     public LiveData<Integer> getTotalCalories() { return totalCalories; }
-    public LiveData<Double> getTotalProtein() { return totalProtein; }
-    public LiveData<Double> getTotalCarbs() { return totalCarbs; }
-    public LiveData<Double> getTotalFat() { return totalFat; }
+    public LiveData<Double> getTotalProtein()   { return totalProtein; }
+    public LiveData<Double> getTotalCarbs()     { return totalCarbs; }
+    public LiveData<Double> getTotalFat()       { return totalFat; }
     public LiveData<List<NutritionData>> getFrequentFoods() { return frequentFoods; }
 
+    // ─── Food log ────────────────────────────────────────────────────────────
     public void addFoodToLog(NutritionData data) {
         executor.execute(() -> {
             NutritionEntry entry = new NutritionEntry(
-                data.getFoodName(), data.getCalories(), data.getProtein(),
-                data.getCarbs(), data.getFat(), System.currentTimeMillis()
+                    data.getFoodName(), data.getCalories(), data.getProtein(),
+                    data.getCarbs(), data.getFat(), System.currentTimeMillis()
             );
             nutritionDao.insert(entry);
-            
             totalCalories.postValue((totalCalories.getValue() != null ? totalCalories.getValue() : 0) + data.getCalories());
             totalProtein.postValue((totalProtein.getValue() != null ? totalProtein.getValue() : 0.0) + data.getProtein());
             totalCarbs.postValue((totalCarbs.getValue() != null ? totalCarbs.getValue() : 0.0) + data.getCarbs());
             totalFat.postValue((totalFat.getValue() != null ? totalFat.getValue() : 0.0) + data.getFat());
-
             saveToFrequent(data);
         });
     }
@@ -133,10 +139,11 @@ public class HealthRepository {
         frequentFoods.postValue(new ArrayList<>(list.subList(0, Math.min(list.size(), 5))));
     }
 
+    // ─── Food search ─────────────────────────────────────────────────────────
     public LiveData<NutritionData> searchFood(String query) {
         MutableLiveData<NutritionData> data = new MutableLiveData<>();
         String cleanQuery = query.toLowerCase().trim();
-        
+
         NutritionData cached = searchCache.get(cleanQuery);
         if (cached != null) {
             data.setValue(cached);
@@ -155,13 +162,11 @@ public class HealthRepository {
                                 if (!p.has("nutriments")) continue;
                                 JsonObject n = p.getAsJsonObject("nutriments");
                                 if (!n.has("energy-kcal_100g") && !n.has("energy_100g")) continue;
-                                
                                 String name = p.has("product_name") ? p.get("product_name").getAsString() : query;
                                 int cal = n.has("energy-kcal_100g") ? n.get("energy-kcal_100g").getAsInt() : (int)(n.get("energy_100g").getAsDouble() / 4.184);
                                 double prot = n.has("proteins_100g") ? n.get("proteins_100g").getAsDouble() : 0;
                                 double carb = n.has("carbohydrates_100g") ? n.get("carbohydrates_100g").getAsDouble() : 0;
                                 double fat = n.has("fat_100g") ? n.get("fat_100g").getAsDouble() : 0;
-                                
                                 NutritionData result = new NutritionData(name, cal, prot, carb, fat);
                                 searchCache.put(cleanQuery, result);
                                 data.postValue(result);
@@ -184,12 +189,13 @@ public class HealthRepository {
 
     private NutritionData getFallbackNutrition(String query) {
         String q = query.toLowerCase().trim();
-        if (q.contains("pasta")) return new NutritionData(query, 131, 5, 25, 1);
+        if (q.contains("pasta"))   return new NutritionData(query, 131, 5, 25, 1);
         if (q.contains("chicken")) return new NutritionData(query, 165, 31, 0, 4);
-        if (q.contains("apple")) return new NutritionData(query, 52, 0, 14, 0);
+        if (q.contains("apple"))   return new NutritionData(query, 52, 0, 14, 0);
         return new NutritionData(query + " (est.)", 150, 8, 20, 5);
     }
 
+    // ─── Journal ─────────────────────────────────────────────────────────────
     public void saveJournalEntry(String content, int moodScore) {
         executor.execute(() -> {
             JournalEntry entry = new JournalEntry(content, System.currentTimeMillis(), moodScore);
@@ -205,8 +211,11 @@ public class HealthRepository {
         return journalDao.getAverageMoodThisWeek(System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L));
     }
 
-    public LiveData<JournalEntry> getLatestEntry() { return journalDao.getLatestEntry(); }
+    public LiveData<JournalEntry> getLatestEntry() {
+        return journalDao.getLatestEntry();
+    }
 
+    // ─── Nutrition entries ────────────────────────────────────────────────────
     public LiveData<List<NutritionEntry>> getNutritionEntriesForToday() {
         return nutritionDao.getEntriesForToday(getStartOfDay());
     }
@@ -215,6 +224,7 @@ public class HealthRepository {
         return nutritionDao.getTotalCaloriesToday(getStartOfDay());
     }
 
+    // ─── Physical ────────────────────────────────────────────────────────────
     public LiveData<FitbitData> getFitbitData() {
         MutableLiveData<FitbitData> data = new MutableLiveData<>();
         physicalDao.getPhysicalEntry().observeForever(entry -> {
@@ -235,26 +245,47 @@ public class HealthRepository {
         executor.execute(() -> physicalDao.insertOrUpdate(entry));
     }
 
-    private long getStartOfDay() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
+    // ─── Goals ───────────────────────────────────────────────────────────────
+    public LiveData<UserGoals> getUserGoals() {
+        return userGoalsDao.getGoals();
     }
 
+    public void saveGoals(UserGoals goals) {
+        executor.execute(() -> userGoalsDao.insertOrUpdate(goals));
+    }
+
+    // Check if goals have ever been saved — used to decide whether to show onboarding
+    // Must be called off the main thread
+    public boolean hasGoalsBeenSet(Context context) {
+        return AppDatabase.getInstance(context).userGoalsDao().getGoalsSync() != null;
+    }
+
+    // ─── Wellness quote ───────────────────────────────────────────────────────
     public LiveData<String> getWellnessQuote() {
         MutableLiveData<String> quoteData = new MutableLiveData<>();
         quoteApi.getTodayQuote().enqueue(new Callback<JsonArray>() {
             @Override
             public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().size() > 0) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().size() > 0) {
                     JsonObject q = response.body().get(0).getAsJsonObject();
-                    quoteData.setValue("\"" + q.get("q").getAsString() + "\" — " + q.get("a").getAsString());
+                    quoteData.setValue("\"" + q.get("q").getAsString()
+                            + "\" — " + q.get("a").getAsString());
                 }
             }
             @Override public void onFailure(Call<JsonArray> call, Throwable t) {}
         });
         return quoteData;
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    private long getStartOfDay() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     private interface QuoteApiService {

@@ -102,6 +102,8 @@ public class DashboardFragment extends Fragment {
                 nav.setSelectedItemId(R.id.nav_diet));
         view.findViewById(R.id.card_mental).setOnClickListener(v ->
                 nav.setSelectedItemId(R.id.nav_mental));
+        view.findViewById(R.id.card_goals).setOnClickListener(v ->
+                nav.setSelectedItemId(R.id.nav_goals));
 
         // Show "Set password" option for Google-only users
         TextView btnSetPassword = view.findViewById(R.id.btn_set_password);

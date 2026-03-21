@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.totalhealthdashboard.R;
+import com.totalhealthdashboard.repository.HealthRepository;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -51,8 +52,9 @@ public class LoginActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
 
+        // If already logged in check onboarding then proceed
         if (auth.getCurrentUser() != null) {
-            goToMain();
+            checkOnboardingAndProceed();
             return;
         }
 
@@ -60,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         tvError    = findViewById(R.id.tv_error);
 
+        // Google Sign In setup
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(
                 GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -67,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // Email login
+        // Email login — returning users skip onboarding
         findViewById(R.id.btn_login).setOnClickListener(v -> {
             String email    = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
@@ -76,16 +79,24 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
             auth.signInWithEmailAndPassword(email, password)
-                    .addOnSuccessListener(r -> goToMain())
+                    .addOnSuccessListener(r -> checkOnboardingAndProceed())
                     .addOnFailureListener(e -> {
                         if (e instanceof FirebaseAuthException) {
+                            // FIX 5 — correct error messages per error type
                             String code = ((FirebaseAuthException) e).getErrorCode();
-                            if (code.equals("ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL")
-                                    || code.equals("ERROR_INVALID_CREDENTIAL")
-                                    || (e.getMessage() != null &&
-                                    e.getMessage().contains("credential is incorrect"))) {
+                            if (code.equals("ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL")) {
                                 showError("This email is linked to Google — use " +
                                         "'Continue with Google' instead");
+                                return;
+                            }
+                            if (code.equals("ERROR_WRONG_PASSWORD")
+                                    || code.equals("ERROR_INVALID_LOGIN_CREDENTIALS")
+                                    || code.equals("ERROR_INVALID_CREDENTIAL")) {
+                                showError("Email or password is incorrect");
+                                return;
+                            }
+                            if (code.equals("ERROR_USER_NOT_FOUND")) {
+                                showError("Email or password is incorrect");
                                 return;
                             }
                         }
@@ -93,7 +104,7 @@ public class LoginActivity extends AppCompatActivity {
                     });
         });
 
-        // Email register
+        // Email register — asks for name then goes to onboarding
         findViewById(R.id.btn_register).setOnClickListener(v -> {
             String email    = etEmail.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
@@ -110,20 +121,73 @@ public class LoginActivity extends AppCompatActivity {
                     .addOnFailureListener(e -> showError(e.getMessage()));
         });
 
-        // Google sign in
+        // Google sign in — sign out first so user can pick account
         findViewById(R.id.btn_google_signin).setOnClickListener(v ->
                 googleSignInClient.signOut().addOnCompleteListener(task -> {
                     Intent signInIntent = googleSignInClient.getSignInIntent();
                     googleSignInLauncher.launch(signInIntent);
                 })
         );
+
+        // FIX 8 — Show/Hide text instead of emoji
+        findViewById(R.id.btn_toggle_password).setOnClickListener(v -> {
+            TextView btnToggle = (TextView) v;
+            if (etPassword.getInputType() ==
+                    (android.text.InputType.TYPE_CLASS_TEXT |
+                            android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                etPassword.setInputType(
+                        android.text.InputType.TYPE_CLASS_TEXT |
+                                android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                btnToggle.setText("Hide");
+            } else {
+                etPassword.setInputType(
+                        android.text.InputType.TYPE_CLASS_TEXT |
+                                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                btnToggle.setText("Show");
+            }
+            etPassword.setSelection(etPassword.getText().length());
+        });
+
+        // FIX 7 — Add spam folder reminder to forgot password message
+        findViewById(R.id.btn_forgot_password).setOnClickListener(v -> {
+            String email = etEmail.getText().toString().trim();
+            if (email.isEmpty()) {
+                showError("Enter your email address first");
+                return;
+            }
+            auth.sendPasswordResetEmail(email)
+                    .addOnSuccessListener(r -> {
+                        tvError.setTextColor(0xFF4CAF50);
+                        tvError.setText("Password reset email sent to " + email
+                                + " — check your spam folder if you don't see it");
+                        tvError.setVisibility(View.VISIBLE);
+                    })
+                    .addOnFailureListener(e -> showError(e.getMessage()));
+        });
     }
 
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         auth.signInWithCredential(credential)
-                .addOnSuccessListener(r -> goToMain())
+                .addOnSuccessListener(r -> checkOnboardingAndProceed())
                 .addOnFailureListener(e -> showError(e.getMessage()));
+    }
+
+    // Check if goals have been set — new users go to onboarding, returning users go to main
+    private void checkOnboardingAndProceed() {
+        HealthRepository repo = HealthRepository.getInstance();
+        repo.init(this);
+        new Thread(() -> {
+            boolean hasGoals = repo.hasGoalsBeenSet(this);
+            runOnUiThread(() -> {
+                if (hasGoals) {
+                    goToMain();
+                } else {
+                    startActivity(new Intent(this, OnboardingActivity.class));
+                    finish();
+                }
+            });
+        }).start();
     }
 
     private void showNameDialog(FirebaseUser user) {
@@ -167,7 +231,6 @@ public class LoginActivity extends AppCompatActivity {
         input.setLayoutParams(inputParams);
         layout.addView(input);
 
-        // Big obvious continue button
         Button btnContinue = new Button(this);
         btnContinue.setText("Continue →");
         btnContinue.setTextSize(16);
@@ -203,7 +266,9 @@ public class LoginActivity extends AppCompatActivity {
             user.updateProfile(profileUpdate)
                     .addOnCompleteListener(task -> {
                         dialog.dismiss();
-                        goToMain();
+                        // New user — always go to onboarding
+                        startActivity(new Intent(LoginActivity.this, OnboardingActivity.class));
+                        finish();
                     });
         });
 
@@ -216,6 +281,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showError(String message) {
+        tvError.setTextColor(0xFFF44336);
         tvError.setText(message);
         tvError.setVisibility(View.VISIBLE);
     }

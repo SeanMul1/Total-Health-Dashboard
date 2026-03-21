@@ -17,7 +17,7 @@
         android:icon="@android:drawable/ic_menu_myplaces"
         android:title="Mental"/>
     <item
-        android:id="@+id/nav_journal"
-        android:icon="@android:drawable/ic_menu_edit"
-        android:title="Journal"/>
+        android:id="@+id/nav_goals"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Goals"/>
 </menu>

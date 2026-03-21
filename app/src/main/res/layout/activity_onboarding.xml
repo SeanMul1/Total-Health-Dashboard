@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set Your Goals 🎯"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:fontFamily="@font/poppins_semibold"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="These are your default targets. You can change any of them later in the Goals section."
+            android:textSize="14sp"
+            android:textColor="#9E9E9E"
+            android:lineSpacingMultiplier="1.4"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- PHYSICAL section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PHYSICAL"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#9E9E9E"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <!-- Steps -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🚶 Daily Steps" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_steps_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="10,000" android:textSize="15sp" android:textStyle="bold" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_steps" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="20000" android:progress="10000" android:progressTint="#4CAF50" android:thumbTint="#4CAF50"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="2,000 ← drag → 20,000" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Active Minutes -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⏱️ Active Minutes" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_active_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="30 min" android:textSize="15sp" android:textStyle="bold" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_active" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="120" android:progress="30" android:progressTint="#4CAF50" android:thumbTint="#4CAF50"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="10 ← drag → 120 min" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Sleep -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="24dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="😴 Sleep Hours" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_sleep_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="8.0 hrs" android:textSize="15sp" android:textStyle="bold" android:textColor="#2196F3" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_sleep" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="12" android:progress="8" android:progressTint="#2196F3" android:thumbTint="#2196F3"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4 ← drag → 12 hrs" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- DIET section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DIET"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#9E9E9E"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <!-- Calories -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🔥 Daily Calories" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_calories_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2,000 kcal" android:textSize="15sp" android:textStyle="bold" android:textColor="#FF9800" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_calories" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="4000" android:progress="2000" android:progressTint="#FF9800" android:thumbTint="#FF9800"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1,000 ← drag → 4,000 kcal" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Protein -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="24dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🥩 Daily Protein" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_protein_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="50g" android:textSize="15sp" android:textStyle="bold" android:textColor="#F44336" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_protein" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="200" android:progress="50" android:progressTint="#F44336" android:thumbTint="#F44336"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="10g ← drag → 200g" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- MENTAL section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MENTAL"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#9E9E9E"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <!-- Mood target -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🙂 Target Mood Score" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_mood_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="7/10" android:textSize="15sp" android:textStyle="bold" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_mood" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="6" android:progressTint="#9C27B0" android:thumbTint="#9C27B0"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1 ← drag → 10" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Journal days -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="32dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="📓 Journal Days Per Week" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                    <TextView android:id="@+id/tv_journal_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="5 days" android:textSize="15sp" android:textStyle="bold" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
+                </LinearLayout>
+                <SeekBar android:id="@+id/sb_journal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="6" android:progress="4" android:progressTint="#9C27B0" android:thumbTint="#9C27B0"/>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1 ← drag → 7 days" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Save button -->
+        <Button
+            android:id="@+id/btn_save_goals"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Let's Go! 🚀"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#1A1A1A"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp"/>
+
+        <TextView
+            android:id="@+id/btn_skip_onboarding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Use defaults and skip"
+            android:textSize="13sp"
+            android:textColor="#9E9E9E"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="8dp"
+            android:layout_marginBottom="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
+
+    </LinearLayout>
+</ScrollView>

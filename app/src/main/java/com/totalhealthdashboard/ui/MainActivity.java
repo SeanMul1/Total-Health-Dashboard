@@ -11,7 +11,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.totalhealthdashboard.R;
 import com.totalhealthdashboard.ui.dashboard.DashboardFragment;
 import com.totalhealthdashboard.ui.diet.DietFragment;
-import com.totalhealthdashboard.ui.journal.JournalFragment;
+import com.totalhealthdashboard.ui.goals.GoalsFragment;
 import com.totalhealthdashboard.ui.mental.MentalFragment;
 import com.totalhealthdashboard.ui.physical.PhysicalFragment;
 import java.text.SimpleDateFormat;
@@ -29,19 +29,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav    = findViewById(R.id.bottom_navigation);
         btnBackArrow = findViewById(R.id.btn_back_arrow_main);
 
         // Set today's date
         TextView tvDate = findViewById(R.id.tv_top_date);
         String date = new SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
-            .format(new Date());
+                .format(new Date());
         tvDate.setText(date);
 
-        // Back arrow click logic
-        btnBackArrow.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        btnBackArrow.setOnClickListener(v ->
+                getOnBackPressedDispatcher().onBackPressed());
 
-        // Load dashboard by default
         loadFragment(new DashboardFragment(), false);
         updateHeaderVisibility(R.id.nav_dashboard);
 
@@ -57,14 +56,13 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_mental) {
                 fragment = new MentalFragment();
             } else {
-                fragment = new JournalFragment();
+                fragment = new GoalsFragment();
             }
             loadFragment(fragment, false);
             updateHeaderVisibility(id);
             return true;
         });
 
-        // Back press handling
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -72,20 +70,17 @@ public class MainActivity extends AppCompatActivity {
                     getSupportFragmentManager().popBackStack();
                     return;
                 }
-
                 int selectedId = bottomNav.getSelectedItemId();
                 if (selectedId != R.id.nav_dashboard) {
                     bottomNav.setSelectedItemId(R.id.nav_dashboard);
                     return;
                 }
-
                 if (backPressedTime + 2000 > System.currentTimeMillis()) {
                     finish();
                 } else {
                     backPressedTime = System.currentTimeMillis();
                     Toast.makeText(MainActivity.this,
-                        "Press back again to exit",
-                        Toast.LENGTH_SHORT).show();
+                            "Press back again to exit", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -101,9 +96,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void loadFragment(Fragment fragment, boolean addToBackStack) {
         androidx.fragment.app.FragmentTransaction transaction =
-            getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment);
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, fragment);
         if (addToBackStack) transaction.addToBackStack(null);
         transaction.commit();
     }

@@ -6,8 +6,13 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 @Database(
-        entities = {JournalEntry.class, NutritionEntry.class, PhysicalEntry.class},
-        version = 4,
+        entities = {
+                JournalEntry.class,
+                NutritionEntry.class,
+                PhysicalEntry.class,
+                UserGoals.class
+        },
+        version = 5,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -17,6 +22,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract JournalDao journalDao();
     public abstract NutritionDao nutritionDao();
     public abstract PhysicalDao physicalDao();
+    public abstract UserGoalsDao userGoalsDao();
 
     public static synchronized AppDatabase getInstance(Context context) {
         if (instance == null) {

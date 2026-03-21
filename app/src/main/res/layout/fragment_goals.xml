@@ -1,81 +1,404 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#FAFAFA">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="My Goals"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
-
-    <androidx.cardview.widget.CardView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Goals"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginBottom="4dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Track your weekly progress"
+            android:textSize="14sp"
+            android:textColor="#9E9E9E"
+            android:layout_marginBottom="24dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <!-- PHYSICAL section header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
             <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="PHYSICAL"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#9E9E9E"
+                android:letterSpacing="0.1"
+                android:fontFamily="@font/poppins_semibold"/>
+            <TextView
+                android:id="@+id/btn_expand_physical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🎯 Walk 10,000 steps daily"
-                android:textSize="16sp"/>
-            <ProgressBar
-                android:id="@+id/progress_steps"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:progress="75"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_marginTop="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="7,542 / 10,000 steps"
+                android:text="▼"
                 android:textSize="12sp"
-                android:textColor="#666666"/>
+                android:textColor="#9E9E9E"
+                android:padding="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
+        <!-- Physical goals container -->
         <LinearLayout
+            android:id="@+id/container_physical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🎯 Sleep 8 hours nightly"
-                android:textSize="16sp"/>
-            <ProgressBar
-                android:id="@+id/progress_sleep"
+            android:layout_marginBottom="8dp">
+
+            <!-- Steps goal row -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:progress="82"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_marginTop="8dp"/>
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🚶 Daily Steps" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_steps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_steps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 10,000" android:textSize="13sp" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_steps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_steps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Active minutes goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⏱️ Active Minutes" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_active" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_active" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 30 min" android:textSize="13sp" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_active" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_active" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Sleep hours goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="😴 Sleep Hours" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_sleep" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_sleep" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 8.0 hrs" android:textSize="13sp" android:textColor="#2196F3" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_sleep" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Last night: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_sleep" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Sleep quality goal row — FIX 3 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⭐ Sleep Quality" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_sleep_score" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_sleep_score" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 8/10" android:textSize="13sp" android:textColor="#2196F3" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_sleep_score" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Last night: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_sleep_score" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Resting heart rate goal row — FIX 3 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="❤️ Resting Heart Rate" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_heart_rate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_heart_rate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 70 bpm" android:textSize="13sp" android:textColor="#F44336" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_heart_rate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_heart_rate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- DIET section header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
             <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="DIET"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#9E9E9E"
+                android:letterSpacing="0.1"
+                android:fontFamily="@font/poppins_semibold"/>
+            <TextView
+                android:id="@+id/btn_expand_diet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="7h 20m / 8h target"
+                android:text="▼"
                 android:textSize="12sp"
-                android:textColor="#666666"/>
+                android:textColor="#9E9E9E"
+                android:padding="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
-</LinearLayout>
+        <!-- Diet goals container -->
+        <LinearLayout
+            android:id="@+id/container_diet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp">
+
+            <!-- Calories goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🔥 Daily Calories" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_calories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_calories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 2,000 kcal" android:textSize="13sp" android:textColor="#FF9800" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_calories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_calories" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Protein goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🥩 Daily Protein" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_protein" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_protein" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 50g" android:textSize="13sp" android:textColor="#F44336" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_protein" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_protein" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Carbs goal row — FIX 4 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🍞 Daily Carbs" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_carbs" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_carbs" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 250g" android:textSize="13sp" android:textColor="#FF9800" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_carbs" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_carbs" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Fat goal row — FIX 4 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🥑 Daily Fat" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_fat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_fat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 70g" android:textSize="13sp" android:textColor="#FF9800" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_fat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_fat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- MENTAL / JOURNAL section header — FIX 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MENTAL / JOURNAL"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#9E9E9E"
+                android:letterSpacing="0.1"
+                android:fontFamily="@font/poppins_semibold"/>
+            <TextView
+                android:id="@+id/btn_expand_mental"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▼"
+                android:textSize="12sp"
+                android:textColor="#9E9E9E"
+                android:padding="4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+        </LinearLayout>
+
+        <!-- Mental goals container -->
+        <LinearLayout
+            android:id="@+id/container_mental"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <!-- Mood goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🙂 Target Mood Score" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_mood" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_mood" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 7/10" android:textSize="13sp" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_mood" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="This week avg: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_mood" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Journal days goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="📓 Journal Days/Week" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_journal_days" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_journal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 5 days" android:textSize="13sp" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_journal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="This week: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_journal_days" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- Write journal button removed — FIX 1 (moved to Mental screen) -->
+
+    </LinearLayout>
+</ScrollView>

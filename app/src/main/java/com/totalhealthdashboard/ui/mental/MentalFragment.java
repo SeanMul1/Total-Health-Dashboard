@@ -70,6 +70,14 @@ public class MentalFragment extends Fragment {
             if (quote != null) tvQuote.setText(quote);
         });
 
+        view.findViewById(R.id.btn_write_journal).setOnClickListener(v ->
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container,
+                                new com.totalhealthdashboard.ui.journal.JournalFragment())
+                        .addToBackStack(null)
+                        .commit());
+
         return view;
     }
 
