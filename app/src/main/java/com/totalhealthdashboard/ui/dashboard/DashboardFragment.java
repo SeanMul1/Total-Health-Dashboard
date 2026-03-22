@@ -17,11 +17,29 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.totalhealthdashboard.R;
+import com.totalhealthdashboard.data.local.UserGoals;
+import com.totalhealthdashboard.data.models.FitbitData;
 import com.totalhealthdashboard.repository.HealthRepository;
 import com.totalhealthdashboard.ui.LoginActivity;
 import java.util.Locale;
 
 public class DashboardFragment extends Fragment {
+
+    private HealthRepository repo;
+
+    // Cached latest values so we can recalculate score whenever any changes
+    private FitbitData latestPhysical = null;
+    private Integer latestCalories    = null;
+    private Double  latestProtein     = null;
+    private Double  latestCarbs       = null;
+    private Double  latestFat         = null;
+    private Float   latestMood        = null;
+    private Integer latestJournalDays = null;
+    private UserGoals latestGoals     = null;
+
+    // Score views
+    private TextView tvOverallScore, tvSubPhysical, tvSubDiet, tvSubMental;
+    private TextView tvPhysScore, tvDietScore, tvMentalScore, tvGoalsScore;
 
     @Nullable
     @Override
@@ -42,57 +60,88 @@ public class DashboardFragment extends Fragment {
             }
         }
 
-        // Physical card views
-        TextView tvStepsDash  = view.findViewById(R.id.tv_dash_steps);
-        TextView tvPhysScore  = view.findViewById(R.id.tv_dash_physical_score);
+        // Wire score views
+        tvOverallScore = view.findViewById(R.id.tv_overall_score);
+        tvSubPhysical  = view.findViewById(R.id.tv_sub_physical);
+        tvSubDiet      = view.findViewById(R.id.tv_sub_diet);
+        tvSubMental    = view.findViewById(R.id.tv_sub_mental);
+        tvPhysScore    = view.findViewById(R.id.tv_dash_physical_score);
+        tvDietScore    = view.findViewById(R.id.tv_dash_diet_score);
+        tvMentalScore  = view.findViewById(R.id.tv_dash_mental_score);
+        tvGoalsScore   = view.findViewById(R.id.tv_dash_goals_score);
 
-        // Diet card views
-        TextView tvCalDash    = view.findViewById(R.id.tv_dash_calories);
-        TextView tvDietScore  = view.findViewById(R.id.tv_dash_diet_score);
+        // Subtitle views
+        TextView tvStepsDash = view.findViewById(R.id.tv_dash_steps);
+        TextView tvCalDash   = view.findViewById(R.id.tv_dash_calories);
+        TextView tvMoodDash  = view.findViewById(R.id.tv_dash_mood);
+        TextView tvGoalsDash = view.findViewById(R.id.tv_dash_goals);
 
-        // Mental card views
-        TextView tvMoodDash    = view.findViewById(R.id.tv_dash_mood);
-        TextView tvMentalScore = view.findViewById(R.id.tv_dash_mental_score);
-
-        HealthRepository repo = HealthRepository.getInstance();
+        repo = HealthRepository.getInstance();
         repo.init(requireContext());
 
-        // Physical — Fitbit synthetic data
+        // Observe goals first — needed for score calculations
+        repo.getUserGoals().observe(getViewLifecycleOwner(), goals -> {
+            latestGoals = goals;
+            recalculateScores();
+        });
+
+        // Physical data
         repo.getFitbitData().observe(getViewLifecycleOwner(), data -> {
-            if (data == null) return;
-            tvStepsDash.setText(String.format(Locale.getDefault(),
-                    "%,d steps today", data.getSteps()));
-            int score = Math.min((data.getSteps() * 100) / 10000, 100);
-            tvPhysScore.setText(score + "/100");
-            tvPhysScore.setTextColor(getScoreColour(score));
-        });
-
-        // Diet — real calories from database
-        repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), total -> {
-            if (total == null || total == 0) {
-                tvCalDash.setText("Log a food to see data");
-                tvDietScore.setText("—/100");
-                return;
+            latestPhysical = data;
+            if (data != null) {
+                tvStepsDash.setText(data.getSteps() == 0
+                        ? "Enter your physical data"
+                        : String.format(Locale.getDefault(), "%,d steps today", data.getSteps()));
             }
-            tvCalDash.setText(total + " kcal logged today");
-            int score = Math.min((total * 100) / 2000, 100);
-            tvDietScore.setText(score + "/100");
-            tvDietScore.setTextColor(getScoreColour(score));
+            recalculateScores();
         });
 
-        // Mental — journal mood average
+        // Diet data
+        repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), total -> {
+            latestCalories = total;
+            tvCalDash.setText((total == null || total == 0)
+                    ? "Log a food to see data"
+                    : total + " kcal logged today");
+            recalculateScores();
+        });
+
+        repo.getTotalProtein().observe(getViewLifecycleOwner(), p -> {
+            latestProtein = p;
+            recalculateScores();
+        });
+
+        repo.getTotalCarbs().observe(getViewLifecycleOwner(), c -> {
+            latestCarbs = c;
+            recalculateScores();
+        });
+
+        repo.getTotalFat().observe(getViewLifecycleOwner(), f -> {
+            latestFat = f;
+            recalculateScores();
+        });
+
+        // Mental data
         repo.getAverageMoodThisWeek().observe(getViewLifecycleOwner(), avg -> {
+            latestMood = avg;
             if (avg == null || avg == 0) {
                 tvMoodDash.setText("Write a journal entry");
-                tvMentalScore.setText("—/100");
-                return;
+            } else {
+                tvMoodDash.setText(String.format(Locale.getDefault(),
+                        "Avg mood: %.1f / 10", avg));
             }
-            int score = Math.round(avg * 10);
-            tvMoodDash.setText(String.format(Locale.getDefault(),
-                    "Avg mood: %.1f / 10", avg));
-            tvMentalScore.setText(score + "/100");
-            tvMentalScore.setTextColor(getScoreColour(score));
+            recalculateScores();
         });
+
+        repo.getEntryCountThisWeek().observe(getViewLifecycleOwner(), count -> {
+            latestJournalDays = count;
+            recalculateScores();
+        });
+
+        // Goals card subtitle — show how many goals are being hit
+        repo.getUserGoals().observe(getViewLifecycleOwner(), goals ->
+                tvGoalsDash.setText(goals == null
+                        ? "Set your goals"
+                        : "Tap to view and edit your targets"));
 
         // Card navigation
         BottomNavigationView nav = requireActivity().findViewById(R.id.bottom_navigation);
@@ -105,19 +154,15 @@ public class DashboardFragment extends Fragment {
         view.findViewById(R.id.card_goals).setOnClickListener(v ->
                 nav.setSelectedItemId(R.id.nav_goals));
 
-        // Show "Set password" option for Google-only users
+        // Set password option for Google-only users
         TextView btnSetPassword = view.findViewById(R.id.btn_set_password);
         if (user != null) {
             boolean isGoogleOnly = user.getProviderData().stream()
                     .anyMatch(info -> info.getProviderId().equals("google.com"))
                     && user.getProviderData().stream()
                     .noneMatch(info -> info.getProviderId().equals("password"));
-
-            if (isGoogleOnly) {
-                btnSetPassword.setVisibility(View.VISIBLE);
-            }
+            if (isGoogleOnly) btnSetPassword.setVisibility(View.VISIBLE);
         }
-
         btnSetPassword.setOnClickListener(v -> showSetPasswordDialog());
 
         // Logout
@@ -128,6 +173,152 @@ public class DashboardFragment extends Fragment {
         });
 
         return view;
+    }
+
+    // ─── Score calculation ────────────────────────────────────────────────────
+
+    private void recalculateScores() {
+        // Use default goals if none saved yet
+        UserGoals g = latestGoals != null ? latestGoals : new UserGoals();
+
+        int physScore   = calcPhysicalScore(g);
+        int dietScore   = calcDietScore(g);
+        int mentalScore = calcMentalScore(g);
+
+        // Overall = average of the three categories
+        int overall = (physScore + dietScore + mentalScore) / 3;
+
+        // Update overall hero card
+        tvOverallScore.setText(String.valueOf(overall));
+        tvOverallScore.setTextColor(getScoreColour(overall));
+
+        // Update sub-scores in hero card
+        tvSubPhysical.setText(physScore + "");
+        tvSubDiet.setText(dietScore + "");
+        tvSubMental.setText(mentalScore + "");
+
+        // Update category card scores
+        tvPhysScore.setText(physScore + "/100");
+        tvPhysScore.setTextColor(getScoreColour(physScore));
+
+        tvDietScore.setText(dietScore + "/100");
+        tvDietScore.setTextColor(getScoreColour(dietScore));
+
+        tvMentalScore.setText(mentalScore + "/100");
+        tvMentalScore.setTextColor(getScoreColour(mentalScore));
+
+        tvGoalsScore.setText(overall + "/100");
+        tvGoalsScore.setTextColor(getScoreColour(overall));
+    }
+
+    private int calcPhysicalScore(UserGoals g) {
+        if (latestPhysical == null) return 0;
+
+        int total = 0;
+        int count = 0;
+
+        // Steps
+        if (g.stepsEnabled && g.stepsGoal > 0) {
+            total += Math.min((latestPhysical.getSteps() * 100) / g.stepsGoal, 100);
+            count++;
+        }
+        // Active minutes
+        if (g.activeMinutesEnabled && g.activeMinutesGoal > 0) {
+            total += Math.min((latestPhysical.getActiveMinutes() * 100) / g.activeMinutesGoal, 100);
+            count++;
+        }
+        // Sleep hours
+        if (g.sleepHoursEnabled && g.sleepHoursGoal > 0) {
+            total += (int) Math.min((latestPhysical.getSleepHours() / g.sleepHoursGoal) * 100, 100);
+            count++;
+        }
+        // Sleep quality
+        if (g.sleepScoreEnabled && g.sleepScoreGoal > 0) {
+            total += Math.min((latestPhysical.getSleepScore() * 100) / g.sleepScoreGoal, 100);
+            count++;
+        }
+        // Heart rate — lower is better, score is 100 if at or below goal
+        if (g.heartRateEnabled && g.heartRateGoal > 0 && latestPhysical.getHeartRate() > 0) {
+            int hrScore = latestPhysical.getHeartRate() <= g.heartRateGoal ? 100
+                    : Math.max(0, 100 - (latestPhysical.getHeartRate() - g.heartRateGoal) * 5);
+            total += hrScore;
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
+    private int calcDietScore(UserGoals g) {
+        int total = 0;
+        int count = 0;
+
+        int cal   = latestCalories  != null ? latestCalories  : 0;
+        double p  = latestProtein   != null ? latestProtein   : 0;
+        double c  = latestCarbs     != null ? latestCarbs     : 0;
+        double f  = latestFat       != null ? latestFat       : 0;
+
+        // Calories — score 100 when within 10% of goal, penalise over/under
+        if (g.caloriesEnabled && g.caloriesGoal > 0) {
+            double ratio = (double) cal / g.caloriesGoal;
+            int calScore;
+            if (ratio >= 0.9 && ratio <= 1.1) calScore = 100;
+            else if (ratio < 0.9) calScore = (int)(ratio / 0.9 * 100);
+            else calScore = Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += calScore;
+            count++;
+        }
+        // Protein
+        if (g.proteinEnabled && g.proteinGoal > 0) {
+            total += (int) Math.min((p / g.proteinGoal) * 100, 100);
+            count++;
+        }
+        // Carbs
+        if (g.carbsEnabled && g.carbsGoal > 0) {
+            double ratio = c / g.carbsGoal;
+            int carbScore = ratio >= 0.9 && ratio <= 1.1 ? 100
+                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
+                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += carbScore;
+            count++;
+        }
+        // Fat
+        if (g.fatEnabled && g.fatGoal > 0) {
+            double ratio = f / g.fatGoal;
+            int fatScore = ratio >= 0.9 && ratio <= 1.1 ? 100
+                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
+                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += fatScore;
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
+    private int calcMentalScore(UserGoals g) {
+        int total = 0;
+        int count = 0;
+
+        // Mood score
+        if (g.moodEnabled && g.moodGoal > 0 && latestMood != null && latestMood > 0) {
+            total += (int) Math.min((latestMood / g.moodGoal) * 100, 100);
+            count++;
+        }
+        // Journal days
+        if (g.journalDaysEnabled && g.journalDaysGoal > 0) {
+            int days = latestJournalDays != null ? latestJournalDays : 0;
+            total += Math.min((days * 100) / g.journalDaysGoal, 100);
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private int getScoreColour(int score) {
+        if (score >= 75) return 0xFF4CAF50;
+        if (score >= 50) return 0xFFFF9800;
+        return 0xFFF44336;
     }
 
     private void showSetPasswordDialog() {
@@ -190,7 +381,6 @@ public class DashboardFragment extends Fragment {
 
         builder.setView(layout);
         builder.setCancelable(true);
-
         android.app.AlertDialog dialog = builder.create();
 
         btnSave.setOnClickListener(v -> {
@@ -220,11 +410,5 @@ public class DashboardFragment extends Fragment {
         });
 
         dialog.show();
-    }
-
-    private int getScoreColour(int score) {
-        if (score >= 75) return 0xFF4CAF50;
-        if (score >= 50) return 0xFFFF9800;
-        return 0xFFF44336;
     }
 }
