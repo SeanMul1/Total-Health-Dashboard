@@ -53,7 +53,6 @@
                     android:textColor="#1A1A1A"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Mood emoji display -->
                 <TextView
                     android:id="@+id/tv_mood_emoji"
                     android:layout_width="wrap_content"
@@ -84,7 +83,6 @@
                     android:layout_gravity="center"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Slider -->
                 <SeekBar
                     android:id="@+id/seekbar_mood"
                     android:layout_width="match_parent"
@@ -94,7 +92,6 @@
                     android:progressTint="#9C27B0"
                     android:thumbTint="#9C27B0"/>
 
-                <!-- Scale labels -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -180,6 +177,25 @@
             android:backgroundTint="#1A1A1A"
             android:textColor="#FFFFFF"
             app:cornerRadius="12dp"/>
+
+        <!-- Past entries section — inside the LinearLayout -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RECENT ENTRIES"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#9E9E9E"
+            android:letterSpacing="0.1"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/poppins_semibold"/>
+
+        <LinearLayout
+            android:id="@+id/journal_list_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
 
     </LinearLayout>
 </ScrollView>

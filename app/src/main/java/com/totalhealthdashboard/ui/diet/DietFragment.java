@@ -32,6 +32,11 @@ public class DietFragment extends Fragment {
     private NutritionData adjustedNutrition;
     private double currentPortionGrams = 150.0;
 
+    // Cached macro values so updateMacroSummary can read them
+    private double cachedProtein = 0;
+    private double cachedCarbs   = 0;
+    private double cachedFat     = 0;
+
     private EditText searchInput;
     private ProgressBar searchProgress;
     private CardView cardResult;
@@ -77,10 +82,8 @@ public class DietFragment extends Fragment {
         customPortionContainer = v.findViewById(R.id.custom_portion_container);
         etCustomGrams          = v.findViewById(R.id.et_custom_grams);
 
-        // Search button
         v.findViewById(R.id.btn_search).setOnClickListener(v2 -> triggerSearch());
 
-        // Keyboard search action
         searchInput.setOnEditorActionListener((tv, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 triggerSearch();
@@ -89,11 +92,8 @@ public class DietFragment extends Fragment {
             return false;
         });
 
-        // Add to log — re-reads custom grams at save time
         v.findViewById(R.id.btn_add_to_log).setOnClickListener(v2 -> {
             if (adjustedNutrition == null) return;
-
-            // If custom chip selected, re-read the input box at save time
             if (portionChips.getCheckedChipId() == R.id.chip_custom) {
                 String customText = etCustomGrams.getText().toString().trim();
                 if (!customText.isEmpty()) {
@@ -103,20 +103,15 @@ public class DietFragment extends Fragment {
                     } catch (NumberFormatException ignored) {}
                 }
             }
-
             repo.addFoodToLog(adjustedNutrition);
             cardResult.setVisibility(View.GONE);
             searchInput.setText("");
             Toast.makeText(getContext(), "Added to log ✓", Toast.LENGTH_SHORT).show();
         });
 
-        // Portion selector — only fires after a food is selected
         portionChips.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
-
-            // Don't update if no food is selected yet
             if (baseNutrition == null) return;
-
             int id = checkedIds.get(0);
             if (id == R.id.chip_small) {
                 currentPortionGrams = 75;
@@ -140,7 +135,6 @@ public class DietFragment extends Fragment {
             updateAdjustedNutrition();
         });
 
-        // Custom grams keyboard done action
         etCustomGrams.setOnEditorActionListener((tv, actionId, event) -> {
             try {
                 currentPortionGrams = Double.parseDouble(tv.getText().toString());
@@ -156,15 +150,11 @@ public class DietFragment extends Fragment {
             Toast.makeText(getContext(), "Type at least 2 characters", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        // Hide keyboard
         InputMethodManager imm = (InputMethodManager)
                 requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(searchInput.getWindowToken(), 0);
-
         searchProgress.setVisibility(View.VISIBLE);
         cardResult.setVisibility(View.GONE);
-
         repo.searchFood(query).observe(getViewLifecycleOwner(), data -> {
             searchProgress.setVisibility(View.GONE);
             if (data != null) {
@@ -177,7 +167,6 @@ public class DietFragment extends Fragment {
         });
     }
 
-    // Central method for selecting a food — used by search and frequent chips
     private void selectFood(NutritionData data) {
         baseNutrition = data;
         currentPortionGrams = 150;
@@ -210,12 +199,22 @@ public class DietFragment extends Fragment {
     }
 
     private void observeData() {
-        repo.getTotalCalories().observe(getViewLifecycleOwner(), total ->
+        repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), total ->
                 tvTotalCalories.setText((total != null ? total : 0) + " kcal"));
 
-        repo.getTotalProtein().observe(getViewLifecycleOwner(), p -> updateMacroSummary());
-        repo.getTotalCarbs().observe(getViewLifecycleOwner(), c -> updateMacroSummary());
-        repo.getTotalFat().observe(getViewLifecycleOwner(), f -> updateMacroSummary());
+        // Cache values as they arrive then update display
+        repo.getTotalProteinToday().observe(getViewLifecycleOwner(), p -> {
+            cachedProtein = p != null ? p : 0;
+            updateMacroSummary();
+        });
+        repo.getTotalCarbsToday().observe(getViewLifecycleOwner(), c -> {
+            cachedCarbs = c != null ? c : 0;
+            updateMacroSummary();
+        });
+        repo.getTotalFatToday().observe(getViewLifecycleOwner(), f -> {
+            cachedFat = f != null ? f : 0;
+            updateMacroSummary();
+        });
 
         repo.getNutritionEntriesForToday().observe(getViewLifecycleOwner(), entries -> {
             foodLogContainer.removeAllViews();
@@ -243,12 +242,10 @@ public class DietFragment extends Fragment {
         });
     }
 
+    // Uses cached values — no new LiveData created here
     private void updateMacroSummary() {
-        double p = repo.getTotalProtein().getValue() != null ? repo.getTotalProtein().getValue() : 0;
-        double c = repo.getTotalCarbs().getValue() != null ? repo.getTotalCarbs().getValue() : 0;
-        double f = repo.getTotalFat().getValue() != null ? repo.getTotalFat().getValue() : 0;
         tvTotalMacros.setText(String.format(Locale.getDefault(),
-                "P: %.0fg  C: %.0fg  F: %.0fg", p, c, f));
+                "P: %.0fg  C: %.0fg  F: %.0fg", cachedProtein, cachedCarbs, cachedFat));
     }
 
     private void addLogRow(NutritionEntry entry) {

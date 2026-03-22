@@ -21,4 +21,13 @@ public interface NutritionDao {
 
     @Query("SELECT SUM(calories) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
     LiveData<Integer> getTotalCaloriesToday(String userId, long startOfDay);
+
+    @Query("SELECT SUM(protein) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    LiveData<Double> getTotalProteinToday(String userId, long startOfDay);
+
+    @Query("SELECT SUM(carbs) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    LiveData<Double> getTotalCarbsToday(String userId, long startOfDay);
+
+    @Query("SELECT SUM(fat) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    LiveData<Double> getTotalFatToday(String userId, long startOfDay);
 }

@@ -40,7 +40,7 @@ public class FitbitData {
         this.caloriesBurned = 0;
         this.activeMinutes = 0;
         // this.floorsClimbed = 12;
-        this.heartRate = 60;
+        this.heartRate = 0;
         // this.fatBurnMinutes = 25;
         // this.cardioMinutes = 10;
         // this.peakMinutes = 3;

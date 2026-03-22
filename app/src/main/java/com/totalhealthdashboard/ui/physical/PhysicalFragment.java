@@ -33,9 +33,6 @@ public class PhysicalFragment extends Fragment {
         repo.init(requireContext());
 
         // Active views
-        TextView tvSteps      = view.findViewById(R.id.tv_steps);
-        TextView tvStepsPct   = view.findViewById(R.id.tv_steps_percent);
-        TextView tvDistance   = view.findViewById(R.id.tv_distance);
         TextView tvCalories   = view.findViewById(R.id.tv_calories_burned);
         TextView tvActive     = view.findViewById(R.id.tv_active_minutes);
         TextView tvHR         = view.findViewById(R.id.tv_heart_rate);
@@ -43,7 +40,6 @@ public class PhysicalFragment extends Fragment {
         TextView tvSleepScore = view.findViewById(R.id.tv_sleep_score);
         TextView tvStress     = view.findViewById(R.id.tv_stress);
         TextView tvDataSource = view.findViewById(R.id.tv_data_source);
-        ProgressBar progress  = view.findViewById(R.id.progress_steps);
 
         // FUTURE: uncomment when fields added back to PhysicalEntry and XML
         // TextView tvFloors     = view.findViewById(R.id.tv_floors);
@@ -66,11 +62,6 @@ public class PhysicalFragment extends Fragment {
             // Activity — show — when no data entered yet
             int steps = data.getSteps();
             int pct = Math.min((steps * 100) / 10000, 100);
-            tvSteps.setText(steps == 0 ? "—" : String.format("%,d", steps));
-            progress.setProgress(pct);
-            tvStepsPct.setText(steps == 0 ? "No data yet" : pct + "% of daily goal");
-            tvDistance.setText(data.getDistanceKm() == 0 ? "—"
-                    : String.format(Locale.getDefault(), "%.1f km", data.getDistanceKm()));
             tvCalories.setText(data.getCaloriesBurned() == 0 ? "—"
                     : String.valueOf(data.getCaloriesBurned()));
             tvActive.setText(data.getActiveMinutes() == 0 ? "—"

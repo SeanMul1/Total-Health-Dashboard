@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 import java.util.List;
+import androidx.room.Delete;
 
 @Dao
 public interface JournalDao {
@@ -23,4 +24,10 @@ public interface JournalDao {
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId ORDER BY timestamp DESC LIMIT 1")
     LiveData<JournalEntry> getLatestEntry(String userId);
+
+    @Delete
+    void delete(JournalEntry entry);
+
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId ORDER BY timestamp DESC LIMIT :limit")
+    LiveData<List<JournalEntry>> getRecentEntries(String userId, int limit);
 }

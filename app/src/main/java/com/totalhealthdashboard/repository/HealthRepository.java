@@ -87,6 +87,12 @@ public class HealthRepository {
     }
 
     public void init(Context context) {
+        // Reset in-memory totals for this user session
+        totalCalories.postValue(0);
+        totalProtein.postValue(0.0);
+        totalCarbs.postValue(0.0);
+        totalFat.postValue(0.0);
+
         AppDatabase db = AppDatabase.getInstance(context);
         journalDao   = db.journalDao();
         nutritionDao = db.nutritionDao();
@@ -103,6 +109,18 @@ public class HealthRepository {
     public LiveData<Double> getTotalCarbs()     { return totalCarbs; }
     public LiveData<Double> getTotalFat()       { return totalFat; }
     public LiveData<List<NutritionData>> getFrequentFoods() { return frequentFoods; }
+
+    public LiveData<Double> getTotalProteinToday() {
+        return nutritionDao.getTotalProteinToday(uid(), getStartOfDay());
+    }
+
+    public LiveData<Double> getTotalCarbsToday() {
+        return nutritionDao.getTotalCarbsToday(uid(), getStartOfDay());
+    }
+
+    public LiveData<Double> getTotalFatToday() {
+        return nutritionDao.getTotalFatToday(uid(), getStartOfDay());
+    }
 
     // ─── Food log ─────────────────────────────────────────────────────────────
     public void addFoodToLog(NutritionData data) {
@@ -247,6 +265,14 @@ public class HealthRepository {
 
     public LiveData<JournalEntry> getLatestEntry() {
         return journalDao.getLatestEntry(uid());
+    }
+
+    public void deleteJournalEntry(JournalEntry entry) {
+        executor.execute(() -> journalDao.delete(entry));
+    }
+
+    public LiveData<List<JournalEntry>> getAllJournalEntries() {
+        return journalDao.getRecentEntries(uid(), 5);
     }
 
     // ─── Nutrition entries ────────────────────────────────────────────────────
