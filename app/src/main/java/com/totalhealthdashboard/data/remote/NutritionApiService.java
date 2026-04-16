@@ -13,3 +13,5 @@ public interface NutritionApiService {
     @GET("cgi/search.pl?action=process&json=true&page_size=10&fields=product_name,nutriments,image_url&sort_by=unique_scans_n&action_type=simple")
     Call<JsonObject> searchProduct(@Query("search_terms") String query);
 }
+
+// testing post user testing features works
