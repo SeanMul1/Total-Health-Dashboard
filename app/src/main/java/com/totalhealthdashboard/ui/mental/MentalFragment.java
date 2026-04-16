@@ -67,7 +67,11 @@ public class MentalFragment extends Fragment {
 
         // ZenQuotes live API call
         repo.getWellnessQuote().observe(getViewLifecycleOwner(), quote -> {
-            if (quote != null) tvQuote.setText(quote);
+            if (quote != null && !quote.isEmpty()) {
+                tvQuote.setText(quote);
+            } else {
+                tvQuote.setText("Could not load quote — check your connection");
+            }
         });
 
         view.findViewById(R.id.btn_write_journal).setOnClickListener(v ->

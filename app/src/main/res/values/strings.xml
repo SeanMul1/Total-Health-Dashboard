@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Total Health Dashboard</string>
     <string name="default_web_client_id">974473574009-t4dnsep0dqhmnfjhmdagp74o33f5go9t.apps.googleusercontent.com</string>
+    <string name="fitbit_client_id">23V7DJ</string>
+    <string name="fitbit_client_secret">4f057371427992d44d80009e2927d35c</string>
+    <string name="fitbit_redirect_uri">totalhealthdashboard://callback</string>
 </resources>

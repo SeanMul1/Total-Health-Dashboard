@@ -15,6 +15,21 @@
         android:theme="@style/Theme.TotalHealthDashboard"
         tools:targetApi="31">
 
+        <!-- Fitbit OAuth callback handler -->
+        <activity
+            android:name=".ui.physical.FitbitCallbackActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="totalhealthdashboard"
+                    android:host="callback"/>
+            </intent-filter>
+        </activity>
+
         <activity android:name=".ui.OnboardingActivity"/>
 
         <activity

@@ -58,6 +58,8 @@ public class HealthRepository {
     private SharedPreferences prefs;
     private final Gson gson = new Gson();
 
+    private final MutableLiveData<String> cachedQuote = new MutableLiveData<>();
+
     private HealthRepository() {
         Retrofit nutritionRetrofit = new Retrofit.Builder()
                 .baseUrl("https://world.openfoodfacts.org/")
@@ -323,20 +325,27 @@ public class HealthRepository {
 
     // ─── Wellness quote ───────────────────────────────────────────────────────
     public LiveData<String> getWellnessQuote() {
-        MutableLiveData<String> quoteData = new MutableLiveData<>();
+        // Only fetch if we haven't got one yet this session
+        if (cachedQuote.getValue() != null) return cachedQuote;
+
         quoteApi.getTodayQuote().enqueue(new Callback<JsonArray>() {
             @Override
             public void onResponse(Call<JsonArray> call, Response<JsonArray> response) {
                 if (response.isSuccessful() && response.body() != null
                         && response.body().size() > 0) {
                     JsonObject q = response.body().get(0).getAsJsonObject();
-                    quoteData.setValue("\"" + q.get("q").getAsString()
+                    cachedQuote.postValue("\"" + q.get("q").getAsString()
                             + "\" — " + q.get("a").getAsString());
+                } else {
+                    cachedQuote.postValue("Take care of your body. It's the only place you have to live.");
                 }
             }
-            @Override public void onFailure(Call<JsonArray> call, Throwable t) {}
+            @Override
+            public void onFailure(Call<JsonArray> call, Throwable t) {
+                cachedQuote.postValue("Take care of your body. It's the only place you have to live.");
+            }
         });
-        return quoteData;
+        return cachedQuote;
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

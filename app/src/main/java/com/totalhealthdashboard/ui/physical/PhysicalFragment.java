@@ -1,12 +1,12 @@
 package com.totalhealthdashboard.ui.physical;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +32,9 @@ public class PhysicalFragment extends Fragment {
         repo = HealthRepository.getInstance();
         repo.init(requireContext());
 
-        // Active views
+        // Views
+        TextView tvSteps    = view.findViewById(R.id.tv_steps);
+        TextView tvDistance = view.findViewById(R.id.tv_distance);
         TextView tvCalories   = view.findViewById(R.id.tv_calories_burned);
         TextView tvActive     = view.findViewById(R.id.tv_active_minutes);
         TextView tvHR         = view.findViewById(R.id.tv_heart_rate);
@@ -41,50 +43,29 @@ public class PhysicalFragment extends Fragment {
         TextView tvStress     = view.findViewById(R.id.tv_stress);
         TextView tvDataSource = view.findViewById(R.id.tv_data_source);
 
-        // FUTURE: uncomment when fields added back to PhysicalEntry and XML
-        // TextView tvFloors     = view.findViewById(R.id.tv_floors);
-        // TextView tvFatBurn    = view.findViewById(R.id.tv_fat_burn);
-        // TextView tvCardio     = view.findViewById(R.id.tv_cardio);
-        // TextView tvPeak       = view.findViewById(R.id.tv_peak);
-        // TextView tvVo2        = view.findViewById(R.id.tv_vo2max);
-        // TextView tvDeep       = view.findViewById(R.id.tv_sleep_deep);
-        // TextView tvRem        = view.findViewById(R.id.tv_sleep_rem);
-        // TextView tvLight      = view.findViewById(R.id.tv_sleep_light);
-        // TextView tvAwake      = view.findViewById(R.id.tv_sleep_awake);
-        // TextView tvSpo2       = view.findViewById(R.id.tv_spo2);
-        // TextView tvHrv        = view.findViewById(R.id.tv_hrv);
-        // TextView tvBreathing  = view.findViewById(R.id.tv_breathing);
-        // TextView tvSkinTemp   = view.findViewById(R.id.tv_skin_temp);
+        // Fitbit auth manager
+        FitbitAuthManager authManager = new FitbitAuthManager(requireContext());
 
+        // Observe physical data and update UI
         repo.getFitbitData().observe(getViewLifecycleOwner(), data -> {
             if (data == null) return;
 
-            // Activity — show — when no data entered yet
-            int steps = data.getSteps();
-            int pct = Math.min((steps * 100) / 10000, 100);
+
+            tvSteps.setText(data.getSteps() == 0 ? "—"
+                    : String.format("%,d", data.getSteps()));
+            tvDistance.setText(data.getDistanceKm() == 0 ? "—"
+                    : String.format(Locale.getDefault(), "%.1f", data.getDistanceKm()));
             tvCalories.setText(data.getCaloriesBurned() == 0 ? "—"
                     : String.valueOf(data.getCaloriesBurned()));
             tvActive.setText(data.getActiveMinutes() == 0 ? "—"
                     : String.valueOf(data.getActiveMinutes()));
-            // FUTURE: tvFloors.setText(String.valueOf(data.getFloorsClimbed()));
-
-            // Heart
             tvHR.setText(data.getHeartRate() == 0 ? "—"
                     : data.getHeartRate() + " bpm");
-            // FUTURE: tvFatBurn.setText(String.valueOf(data.getFatBurnMinutes()));
-            // FUTURE: tvCardio.setText(String.valueOf(data.getCardioMinutes()));
-            // FUTURE: tvPeak.setText(String.valueOf(data.getPeakMinutes()));
-            // FUTURE: tvVo2.setText(String.valueOf(data.getVo2Max()));
-
-            // Sleep
             tvSleep.setText(data.getSleepHours() == 0 ? "—"
                     : String.valueOf(data.getSleepHours()));
             tvSleepScore.setText(data.getSleepScore() == 0 ? "—"
                     : String.valueOf(data.getSleepScore()));
-            // FUTURE: int sleepMins = (int)(data.getSleepHours() * 60);
-            // FUTURE: tvSleep.setText(sleepMins / 60 + "h " + sleepMins % 60 + "m");
 
-            // Wellness — stress
             int stress = data.getStressScore();
             if (stress == 0) {
                 tvStress.setText("—");
@@ -95,24 +76,63 @@ public class PhysicalFragment extends Fragment {
                 else if (stress >= 4) tvStress.setTextColor(0xFFFF9800);
                 else tvStress.setTextColor(0xFFF44336);
             }
-            // FUTURE: tvSpo2.setText(String.valueOf(data.getSpo2()));
-            // FUTURE: tvHrv.setText(String.valueOf(data.getHrv()));
-            // FUTURE: tvBreathing.setText(String.valueOf(data.getBreathingRate()));
-            // FUTURE: tvSkinTemp.setText((data.getSkinTempVariation() >= 0 ? "+" : "") +
-            //         String.format(Locale.getDefault(), "%.1f", data.getSkinTempVariation()));
         });
 
-        // Data source badge
+        // Data source badge — updates when physical entry changes
         repo.getPhysicalEntry().observe(getViewLifecycleOwner(), entry -> {
             if (entry != null) {
-                tvDataSource.setText("  ✓ MANUALLY ENTERED DATA  ");
-                tvDataSource.setTextColor(0xFF4CAF50);
+                if (authManager.isConnected()) {
+                    tvDataSource.setText("  ✓ FITBIT SYNCED  ");
+                    tvDataSource.setTextColor(0xFF00B0B9);
+                } else {
+                    tvDataSource.setText("  ✓ MANUALLY ENTERED DATA  ");
+                    tvDataSource.setTextColor(0xFF4CAF50);
+                }
             } else {
                 tvDataSource.setText("  NO DATA ENTERED YET  ");
                 tvDataSource.setTextColor(0xFF9E9E9E);
             }
         });
 
+        // Fitbit sync button
+        Button btnFitbit = view.findViewById(R.id.btn_fitbit_sync);
+        btnFitbit.setText(authManager.isConnected() ? "Sync Fitbit Data" : "Connect Fitbit");
+
+        btnFitbit.setOnClickListener(v -> {
+            if (authManager.isConnected()) {
+                android.app.AlertDialog alertDialog = new android.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Fitbit Connected")
+                        .setMessage("Tap Sync to refresh your data or Disconnect to unlink your Fitbit.")
+                        .setPositiveButton("Sync Now", (d, w) -> {
+                            Intent intent = new Intent(Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(authManager.getAuthUrl()));
+                            startActivity(intent);
+                        })
+                        .setNegativeButton("Disconnect", (d, w) -> {
+                            authManager.disconnect();
+                            btnFitbit.setText("Connect Fitbit");
+                            tvDataSource.setText("  NO DATA ENTERED YET  ");
+                            tvDataSource.setTextColor(0xFF9E9E9E);
+                            Toast.makeText(getContext(),
+                                    "Fitbit disconnected", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNeutralButton("Cancel", null)
+                        .create();
+                alertDialog.show();
+                alertDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+                        .setTextColor(0xFF00B0B9);
+                alertDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)
+                        .setTextColor(0xFFF44336);
+                alertDialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL)
+                        .setTextColor(0xFF9E9E9E);
+            } else {
+                Intent intent = new Intent(Intent.ACTION_VIEW,
+                        android.net.Uri.parse(authManager.getAuthUrl()));
+                startActivity(intent);
+            }
+        });
+
+        // Manual entry button
         view.findViewById(R.id.btn_manual_entry)
                 .setOnClickListener(v -> showManualEntryDialog());
 
@@ -133,35 +153,21 @@ public class PhysicalFragment extends Fragment {
         addTitle(layout, "Enter Today's Data",
                 "Use the guides to estimate if you don't have a tracker");
 
-        // Active fields
         addSectionHeader(layout, "ACTIVITY");
-        EditText etSteps  = addField(layout, "🚶 Steps", "e.g. 7500  ·  ~1,300 steps per 10 min walk", false);
-        EditText etDist   = addField(layout, "📍 Distance (km)", "e.g. 5.4  ·  ~0.8km per 1,000 steps", true);
-        EditText etCal    = addField(layout, "🔥 Calories Burned", "e.g. 420  ·  light day ~300, active ~600+", false);
-        EditText etActive = addField(layout, "⏱️ Active Minutes", "e.g. 45  ·  WHO recommends 30 min/day", false);
-
-        // FUTURE: floors field
-        // EditText etFloors = addField(layout, "🏢 Floors Climbed", "e.g. 12  ·  each floor ~3 metres", false);
+        EditText etSteps  = addField(layout, "Steps", "e.g. 7500  ·  ~1,300 steps per 10 min walk", false);
+        EditText etDist   = addField(layout, "Distance (km)", "e.g. 5.4  ·  ~0.8km per 1,000 steps", true);
+        EditText etCal    = addField(layout, "Calories Burned", "e.g. 420  ·  light day ~300, active ~600+", false);
+        EditText etActive = addField(layout, "Active Minutes", "e.g. 45  ·  WHO recommends 30 min/day", false);
 
         addSectionHeader(layout, "HEART");
-        EditText etHR = addField(layout, "❤️ Resting Heart Rate (bpm)", "e.g. 72  ·  normal: 60–100 bpm", false);
-
-        // FUTURE: HR zone fields
-        // EditText etFatBurn = addField(layout, "🟡 Fat Burn Zone (min)", "e.g. 25  ·  light-moderate exercise", false);
-        // EditText etCardio  = addField(layout, "🔴 Cardio Zone (min)", "e.g. 10  ·  vigorous exercise", false);
-        // EditText etPeak    = addField(layout, "🟣 Peak Zone (min)", "e.g. 3  ·  max effort exercise", false);
-        // EditText etVo2     = addField(layout, "💨 VO2 Max (ml/kg/min)", "e.g. 42  ·  average adult: 35–50", false);
+        EditText etHR = addField(layout, "Resting Heart Rate (bpm)", "e.g. 72  ·  normal: 60-100 bpm", false);
 
         addSectionHeader(layout, "SLEEP");
-        EditText etSleepH = addField(layout, "😴 Hours Slept", "e.g. 7.5  ·  recommended: 7–9 hours", true);
+        EditText etSleepH = addField(layout, "Hours Slept", "e.g. 7.5  ·  recommended: 7-9 hours", true);
 
-        // FUTURE: detailed sleep fields
-        // EditText etSleepSc = addField(layout, "📊 Sleep Score (0-100)", "e.g. 78  ·  good sleep: 80+", false);
-
-        // Sleep quality slider (1-10)
         addSectionHeader(layout, "WELLNESS");
         android.widget.TextView tvSleepLabel = new android.widget.TextView(requireContext());
-        tvSleepLabel.setText("⭐ Sleep Quality (1–10)");
+        tvSleepLabel.setText("Sleep Quality (1-10)");
         tvSleepLabel.setTextSize(13);
         tvSleepLabel.setTextColor(0xFF666666);
         tvSleepLabel.setPadding(0, 0, 0, 4);
@@ -169,7 +175,7 @@ public class PhysicalFragment extends Fragment {
 
         final int[] sleepScore = {7};
         android.widget.TextView tvSleepVal = new android.widget.TextView(requireContext());
-        tvSleepVal.setText("7 / 10  —  Good");
+        tvSleepVal.setText("7 / 10  -  Good");
         tvSleepVal.setTextSize(14);
         tvSleepVal.setTypeface(null, android.graphics.Typeface.BOLD);
         tvSleepVal.setTextColor(0xFF2196F3);
@@ -190,16 +196,15 @@ public class PhysicalFragment extends Fragment {
         sbSleep.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean u) {
                 sleepScore[0] = p + 1;
-                tvSleepVal.setText(sleepScore[0] + " / 10  —  " + getSleepLabel(sleepScore[0]));
+                tvSleepVal.setText(sleepScore[0] + " / 10  -  " + getSleepLabel(sleepScore[0]));
             }
             public void onStartTrackingTouch(SeekBar s) {}
             public void onStopTrackingTouch(SeekBar s) {}
         });
         layout.addView(sbSleep);
 
-        // Stress slider (1-10)
         android.widget.TextView tvStressLabel = new android.widget.TextView(requireContext());
-        tvStressLabel.setText("🧘 Stress Level (1 = very stressed · 10 = very calm)");
+        tvStressLabel.setText("Stress Level (1 = very stressed, 10 = very calm)");
         tvStressLabel.setTextSize(13);
         tvStressLabel.setTextColor(0xFF666666);
         tvStressLabel.setPadding(0, 0, 0, 4);
@@ -207,7 +212,7 @@ public class PhysicalFragment extends Fragment {
 
         final int[] stressScore = {5};
         android.widget.TextView tvStressVal = new android.widget.TextView(requireContext());
-        tvStressVal.setText("5 / 10  —  Moderate");
+        tvStressVal.setText("5 / 10  -  Moderate");
         tvStressVal.setTextSize(14);
         tvStressVal.setTypeface(null, android.graphics.Typeface.BOLD);
         tvStressVal.setTextColor(0xFF4CAF50);
@@ -228,20 +233,14 @@ public class PhysicalFragment extends Fragment {
         sbStress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean u) {
                 stressScore[0] = p + 1;
-                tvStressVal.setText(stressScore[0] + " / 10  —  " + getStressLabel(stressScore[0]));
+                tvStressVal.setText(stressScore[0] + " / 10  -  " + getStressLabel(stressScore[0]));
             }
             public void onStartTrackingTouch(SeekBar s) {}
             public void onStopTrackingTouch(SeekBar s) {}
         });
         layout.addView(sbStress);
 
-        // FUTURE: wellness fields
-        // EditText etSpo2     = addField(layout, "🫁 SpO2 — Blood Oxygen (%)", "e.g. 97  ·  normal: 95–100%", false);
-        // EditText etHrv      = addField(layout, "💓 HRV (ms)", "e.g. 45  ·  higher = better recovery", false);
-        // EditText etBreath   = addField(layout, "🌬️ Breathing Rate (br/min)", "e.g. 15  ·  normal: 12–20 br/min", false);
-        // EditText etSkinTemp = addField(layout, "🌡️ Skin Temp Variation (°C)", "e.g. 0.2  ·  normal: -0.5 to +0.5", true);
-
-        // Pre-fill with saved values if they exist
+        // Pre-fill with saved values
         repo.getPhysicalEntry().observe(getViewLifecycleOwner(), entry -> {
             if (entry != null) {
                 etSteps.setText(entry.steps == 0 ? "" : String.valueOf(entry.steps));
@@ -255,9 +254,8 @@ public class PhysicalFragment extends Fragment {
             }
         });
 
-        // Save button
         Button btnSave = new Button(requireContext());
-        btnSave.setText("Save Data →");
+        btnSave.setText("Save Data");
         btnSave.setTextSize(16);
         btnSave.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSave.setTextColor(0xFFFFFFFF);
@@ -287,24 +285,9 @@ public class PhysicalFragment extends Fragment {
             entry.stressScore    = stressScore[0];
             entry.timestamp      = System.currentTimeMillis();
 
-            // FUTURE: uncomment when fields added back to PhysicalEntry
-            // entry.floorsClimbed     = parseInt(etFloors, 0);
-            // entry.fatBurnMinutes    = parseInt(etFatBurn, 0);
-            // entry.cardioMinutes     = parseInt(etCardio, 0);
-            // entry.peakMinutes       = parseInt(etPeak, 0);
-            // entry.vo2Max            = parseInt(etVo2, 0);
-            // entry.sleepDeepMinutes  = parseInt(etDeep, 0);
-            // entry.sleepRemMinutes   = parseInt(etRem, 0);
-            // entry.sleepLightMinutes = parseInt(etLight, 0);
-            // entry.sleepAwakeMinutes = parseInt(etAwake, 0);
-            // entry.spo2              = parseInt(etSpo2, 0);
-            // entry.hrv               = parseInt(etHrv, 0);
-            // entry.breathingRate     = parseInt(etBreath, 0);
-            // entry.skinTempVariation = parseDouble(etSkinTemp, 0);
-
             repo.saveManualPhysicalData(entry);
             dialog.dismiss();
-            Toast.makeText(getContext(), "Data saved ✓", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Data saved", Toast.LENGTH_SHORT).show();
         });
 
         dialog.show();
