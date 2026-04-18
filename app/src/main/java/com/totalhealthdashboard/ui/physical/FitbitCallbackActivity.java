@@ -138,159 +138,193 @@ public class FitbitCallbackActivity extends AppCompatActivity {
 
     private void fetchFitbitData(String accessToken, TextView tvStatus) {
         String bearer = "Bearer " + accessToken;
-
-        // Format today's date as YYYY-MM-DD for Fitbit API
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                .format(new java.util.Date());
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                java.util.Locale.getDefault()).format(new java.util.Date());
 
         Log.d(TAG, "Fetching Fitbit data for date: " + today);
 
-        final int[] steps          = {0};
-        final double[] distanceKm  = {0};
-        final int[] caloriesBurned = {0};
-        final int[] activeMinutes  = {0};
-        final int[] heartRate      = {0};
-        final double[] sleepHours  = {0};
-        final int[] callsCompleted = {0};
-        final int totalCalls       = 3;
+        final int[]    steps          = {0};
+        final double[] distanceKm     = {0};
+        final int[]    caloriesBurned = {0};
+        final int[]    activeMinutes  = {0};
+        final int[]    floors         = {0};
+        final int[]    restingHR      = {0};
+        final int[]    currentHR      = {0};
+        final double[] sleepHours     = {0};
+        final int[]    callsCompleted = {0};
+        final int      totalCalls     = 3;
 
         Runnable checkDone = () -> {
             callsCompleted[0]++;
             Log.d(TAG, "Call completed " + callsCompleted[0] + "/" + totalCalls);
             if (callsCompleted[0] == totalCalls) {
-                Log.d(TAG, "All calls done. steps=" + steps[0]
+                Log.d(TAG, "All done. steps=" + steps[0]
+                        + " dist=" + distanceKm[0]
                         + " cals=" + caloriesBurned[0]
                         + " active=" + activeMinutes[0]
-                        + " hr=" + heartRate[0]
+                        + " floors=" + floors[0]
+                        + " restingHR=" + restingHR[0]
                         + " sleep=" + sleepHours[0]);
                 saveAndFinish(steps[0], distanceKm[0], caloriesBurned[0],
-                        activeMinutes[0], heartRate[0], sleepHours[0], tvStatus);
+                        activeMinutes[0], floors[0], restingHR[0],
+                         sleepHours[0], tvStatus);
             }
         };
 
-        // 1 — Activity
+        // 1 — Activity (steps, calories, distance, active minutes, floors)
         fitbitApi.getTodayActivity(bearer, today).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d(TAG, "Activity response code: " + response.code());
+                Log.d(TAG, "Activity response: " + response.code());
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         JsonObject summary = response.body().getAsJsonObject("summary");
                         steps[0]          = summary.get("steps").getAsInt();
                         caloriesBurned[0] = summary.get("caloriesOut").getAsInt();
-                        activeMinutes[0]  = summary.get("fairlyActiveMinutes").getAsInt()
-                                + summary.get("veryActiveMinutes").getAsInt();
+                        floors[0]         = summary.has("floors")
+                                ? summary.get("floors").getAsInt() : 0;
+
+                        // Active Zone Minutes — Fitbit's preferred metric
+                        if (summary.has("activeZoneMinutes")) {
+                            JsonObject azm = summary.getAsJsonObject("activeZoneMinutes");
+                            activeMinutes[0] = azm.has("totalMinutes")
+                                    ? azm.get("totalMinutes").getAsInt() : 0;
+                        }
+                        // Fallback to fairly + very active if AZM not available
+                        if (activeMinutes[0] == 0) {
+                            activeMinutes[0] = summary.get("fairlyActiveMinutes").getAsInt()
+                                    + summary.get("veryActiveMinutes").getAsInt();
+                        }
+
+                        // Distance in km
                         if (summary.has("distances")) {
                             com.google.gson.JsonArray distances =
                                     summary.getAsJsonArray("distances");
                             for (int i = 0; i < distances.size(); i++) {
                                 JsonObject d = distances.get(i).getAsJsonObject();
                                 if ("total".equals(d.get("activity").getAsString())) {
+                                    // Fitbit returns distance in km
                                     distanceKm[0] = d.get("distance").getAsDouble();
                                     break;
                                 }
                             }
                         }
-                        Log.d(TAG, "Activity parsed: steps=" + steps[0]
-                                + " cals=" + caloriesBurned[0]
-                                + " active=" + activeMinutes[0]);
+                        Log.d(TAG, "Activity parsed ok");
                     } catch (Exception e) {
                         Log.e(TAG, "Activity parse error: " + e.getMessage());
                     }
                 } else {
-                    try {
-                        Log.e(TAG, "Activity error body: "
-                                + (response.errorBody() != null
-                                ? response.errorBody().string() : "null"));
-                    } catch (Exception e) { Log.e(TAG, "Could not read activity error body"); }
+                    try { Log.e(TAG, "Activity error: " + response.errorBody().string()); }
+                    catch (Exception e) { Log.e(TAG, "Can't read activity error"); }
                 }
                 checkDone.run();
             }
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e(TAG, "Activity call failed: " + t.getMessage());
+                Log.e(TAG, "Activity failed: " + t.getMessage());
                 checkDone.run();
             }
         });
 
-        // 2 — Heart rate
+        // 2 — Resting heart rate (overnight average)
         fitbitApi.getTodayHeartRate(bearer, today).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d(TAG, "Heart rate response code: " + response.code());
+                Log.d(TAG, "Resting HR response: " + response.code());
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         com.google.gson.JsonArray arr =
                                 response.body().getAsJsonArray("activities-heart");
                         if (arr != null && arr.size() > 0) {
-                            JsonObject hrData = arr.get(0).getAsJsonObject()
+                            JsonObject value = arr.get(0).getAsJsonObject()
                                     .getAsJsonObject("value");
-                            if (hrData.has("restingHeartRate")) {
-                                heartRate[0] = hrData.get("restingHeartRate").getAsInt();
-                                Log.d(TAG, "Heart rate parsed: " + heartRate[0]);
+                            if (value.has("restingHeartRate")) {
+                                restingHR[0] = value.get("restingHeartRate").getAsInt();
+                                Log.d(TAG, "Resting HR: " + restingHR[0]);
                             } else {
-                                Log.w(TAG, "No restingHeartRate in response");
+                                Log.w(TAG, "No restingHeartRate yet — needs overnight data");
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Heart rate parse error: " + e.getMessage());
+                        Log.e(TAG, "Resting HR parse error: " + e.getMessage());
                     }
-                } else {
-                    try {
-                        Log.e(TAG, "Heart rate error body: "
-                                + (response.errorBody() != null
-                                ? response.errorBody().string() : "null"));
-                    } catch (Exception e) { Log.e(TAG, "Could not read HR error body"); }
                 }
                 checkDone.run();
             }
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e(TAG, "Heart rate call failed: " + t.getMessage());
+                Log.e(TAG, "Resting HR failed: " + t.getMessage());
                 checkDone.run();
             }
         });
 
-        // 3 — Sleep
+        // 3 — Current live heart rate (most recent 1-minute reading)
+//        fitbitApi.getCurrentHeartRate(bearer).enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.d(TAG, "Current HR response: " + response.code());
+//                if (response.isSuccessful() && response.body() != null) {
+//                    try {
+//                        JsonObject intraday = response.body()
+//                                .getAsJsonObject("activities-heart-intraday");
+//                        if (intraday != null && intraday.has("dataset")) {
+//                            com.google.gson.JsonArray dataset =
+//                                    intraday.getAsJsonArray("dataset");
+//                            if (dataset.size() > 0) {
+//                                // Get most recent reading
+//                                JsonObject latest = dataset.get(dataset.size() - 1)
+//                                        .getAsJsonObject();
+//                                currentHR[0] = latest.get("value").getAsInt();
+//                                Log.d(TAG, "Current HR: " + currentHR[0]);
+//                            }
+//                        }
+//                    } catch (Exception e) {
+//                        Log.e(TAG, "Current HR parse error: " + e.getMessage());
+//                    }
+//                } else {
+//                    try { Log.e(TAG, "Current HR error: " + response.errorBody().string()); }
+//                    catch (Exception e) { Log.e(TAG, "Can't read current HR error"); }
+//                }
+//                checkDone.run();
+//            }
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e(TAG, "Current HR failed: " + t.getMessage());
+//                checkDone.run();
+//            }
+//        });
+
+        // 4 — Sleep
         fitbitApi.getTodaySleep(bearer, today).enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.d(TAG, "Sleep response code: " + response.code());
+                Log.d(TAG, "Sleep response: " + response.code());
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         JsonObject summary = response.body().getAsJsonObject("summary");
                         if (summary != null && summary.has("totalMinutesAsleep")) {
-                            int totalMinutes = summary.get("totalMinutesAsleep").getAsInt();
-                            sleepHours[0] = Math.round((totalMinutes / 60.0) * 10.0) / 10.0;
-                            Log.d(TAG, "Sleep parsed: " + sleepHours[0] + " hours");
-                        } else {
-                            Log.w(TAG, "No totalMinutesAsleep in sleep summary");
+                            int mins = summary.get("totalMinutesAsleep").getAsInt();
+                            sleepHours[0] = Math.round((mins / 60.0) * 10.0) / 10.0;
+                            Log.d(TAG, "Sleep: " + sleepHours[0] + "h");
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Sleep parse error: " + e.getMessage());
                     }
-                } else {
-                    try {
-                        Log.e(TAG, "Sleep error body: "
-                                + (response.errorBody() != null
-                                ? response.errorBody().string() : "null"));
-                    } catch (Exception e) { Log.e(TAG, "Could not read sleep error body"); }
                 }
                 checkDone.run();
             }
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e(TAG, "Sleep call failed: " + t.getMessage());
+                Log.e(TAG, "Sleep failed: " + t.getMessage());
                 checkDone.run();
             }
         });
     }
 
     private void saveAndFinish(int steps, double distanceKm, int caloriesBurned,
-                               int activeMinutes, int heartRate, double sleepHours,
-                               TextView tvStatus) {
+                               int activeMinutes, int floors, int restingHR,
+                               double sleepHours, TextView tvStatus) {
         runOnUiThread(() -> {
-            Log.d(TAG, "Saving to Room...");
             HealthRepository repo = HealthRepository.getInstance();
             repo.init(this);
 
@@ -300,16 +334,17 @@ public class FitbitCallbackActivity extends AppCompatActivity {
             entry.distanceKm     = distanceKm;
             entry.caloriesBurned = caloriesBurned;
             entry.activeMinutes  = activeMinutes;
-            entry.heartRate      = heartRate;
+            entry.floors         = floors;
+            entry.heartRate      = restingHR;
             entry.sleepHours     = sleepHours;
             entry.sleepScore     = 0;
             entry.stressScore    = 0;
             entry.timestamp      = System.currentTimeMillis();
 
             repo.saveManualPhysicalData(entry);
-            Log.d(TAG, "Saved successfully");
+            Log.d(TAG, "Saved to Room");
 
-            tvStatus.setText("Fitbit synced successfully!");
+            tvStatus.setText("Fitbit synced!");
             Toast.makeText(this, "Fitbit data synced", Toast.LENGTH_LONG).show();
             finishAfterDelay(1500);
         });

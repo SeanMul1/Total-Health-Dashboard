@@ -9,10 +9,11 @@ public class FitbitData {
     private double distanceKm;
     private int caloriesBurned;
     private int activeMinutes;
-    // private int floorsClimbed;
+    private int floors;
 
     // Heart
     private int heartRate;
+    private int currentHeartRate;
     // private int fatBurnMinutes;
     // private int cardioMinutes;
     // private int peakMinutes;
@@ -39,8 +40,9 @@ public class FitbitData {
         this.distanceKm = 0;
         this.caloriesBurned = 0;
         this.activeMinutes = 0;
-        // this.floorsClimbed = 12;
+        this.floors = 12;
         this.heartRate = 0;
+        this.currentHeartRate = 0;
         // this.fatBurnMinutes = 25;
         // this.cardioMinutes = 10;
         // this.peakMinutes = 3;
@@ -64,8 +66,9 @@ public class FitbitData {
         this.distanceKm = e.distanceKm;
         this.caloriesBurned = e.caloriesBurned;
         this.activeMinutes = e.activeMinutes;
-        // this.floorsClimbed = e.floorsClimbed;
+        this.floors = e.floors;
         this.heartRate = e.heartRate;
+        this.currentHeartRate = e.currentHeartRate;
         // this.fatBurnMinutes = e.fatBurnMinutes;
         // this.cardioMinutes = e.cardioMinutes;
         // this.peakMinutes = e.peakMinutes;
@@ -87,8 +90,9 @@ public class FitbitData {
     public double getDistanceKm() { return distanceKm; }
     public int getCaloriesBurned() { return caloriesBurned; }
     public int getActiveMinutes() { return activeMinutes; }
-    // public int getFloorsClimbed() { return floorsClimbed; }
+    public int getFloors() { return floors; }
     public int getHeartRate() { return heartRate; }
+    public int getCurrentHeartRate() { return currentHeartRate; }
     // public int getFatBurnMinutes() { return fatBurnMinutes; }
     // public int getCardioMinutes() { return cardioMinutes; }
     // public int getPeakMinutes() { return peakMinutes; }

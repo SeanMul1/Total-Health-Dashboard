@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase;
                 PhysicalEntry.class,
                 UserGoals.class
         },
-        version = 7,
+        version = 9,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

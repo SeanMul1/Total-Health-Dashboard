@@ -1,5 +1,6 @@
 package com.totalhealthdashboard.repository;
 
+import com.totalhealthdashboard.data.remote.FitbitApiService;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.LruCache;
@@ -38,6 +39,7 @@ import retrofit2.http.GET;
 public class HealthRepository {
 
     private static HealthRepository instance;
+    private FitbitApiService fitbitApi;
     private JournalDao journalDao;
     private NutritionDao nutritionDao;
     private PhysicalDao physicalDao;
@@ -72,6 +74,12 @@ public class HealthRepository {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         quoteApi = quoteRetrofit.create(QuoteApiService.class);
+
+        Retrofit fitbitRetrofit = new Retrofit.Builder()
+                .baseUrl("https://api.fitbit.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        fitbitApi = fitbitRetrofit.create(FitbitApiService.class);
     }
 
     public static synchronized HealthRepository getInstance() {
@@ -81,7 +89,6 @@ public class HealthRepository {
         return instance;
     }
 
-    // Returns current Firebase UID — never null safe fallback to "anonymous"
     private String uid() {
         com.google.firebase.auth.FirebaseUser user =
                 FirebaseAuth.getInstance().getCurrentUser();
@@ -89,7 +96,6 @@ public class HealthRepository {
     }
 
     public void init(Context context) {
-        // Reset in-memory totals for this user session
         totalCalories.postValue(0);
         totalProtein.postValue(0.0);
         totalCarbs.postValue(0.0);
@@ -308,6 +314,175 @@ public class HealthRepository {
         executor.execute(() -> physicalDao.insertOrUpdate(entry));
     }
 
+    // ─── Fitbit background sync ───────────────────────────────────────────────
+    public void syncFitbitInBackground(String accessToken, Runnable onComplete) {
+        String bearer = "Bearer " + accessToken;
+        String today  = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                java.util.Locale.getDefault()).format(new java.util.Date());
+
+        final int[]    steps          = {0};
+        final double[] distanceKm     = {0};
+        final int[]    caloriesBurned = {0};
+        final int[]    activeMinutes  = {0};
+        final int[]    floors         = {0};
+        final int[]    heartRate      = {0};
+        final double[] sleepHours     = {0};
+        final int[]    done           = {0};
+        final int      total          = 3;
+
+        Runnable checkDone = () -> {
+            done[0]++;
+            if (done[0] == total) {
+                executor.execute(() -> {
+                    PhysicalEntry existing = physicalDao.getPhysicalEntrySync(uid());
+
+                    // Check if stored entry is from a previous day
+                    // If so, reset all override flags so Fitbit takes over fresh
+                    boolean isNewDay = false;
+                    if (existing != null && existing.timestamp > 0) {
+                        Calendar storedCal = Calendar.getInstance();
+                        storedCal.setTimeInMillis(existing.timestamp);
+                        Calendar todayCal = Calendar.getInstance();
+                        isNewDay = storedCal.get(Calendar.DAY_OF_YEAR)
+                                != todayCal.get(Calendar.DAY_OF_YEAR)
+                                || storedCal.get(Calendar.YEAR)
+                                != todayCal.get(Calendar.YEAR);
+                    }
+
+                    // If new day treat as no existing overrides
+                    PhysicalEntry ref = (isNewDay || existing == null) ? null : existing;
+
+                    PhysicalEntry entry    = new PhysicalEntry();
+
+                    // Only use Fitbit data if user hasn't overridden that field today
+                    entry.steps          = (ref != null && ref.overrideSteps)
+                            ? ref.steps : steps[0];
+                    entry.distanceKm     = (ref != null && ref.overrideDistance)
+                            ? ref.distanceKm : distanceKm[0];
+                    entry.caloriesBurned = (ref != null && ref.overrideCalories)
+                            ? ref.caloriesBurned : caloriesBurned[0];
+                    entry.activeMinutes  = (ref != null && ref.overrideActiveMinutes)
+                            ? ref.activeMinutes : activeMinutes[0];
+                    entry.heartRate      = (ref != null && ref.overrideHeartRate)
+                            ? ref.heartRate : heartRate[0];
+                    entry.sleepHours     = (ref != null && ref.overrideSleepHours)
+                            ? ref.sleepHours : sleepHours[0];
+                    entry.floors         = floors[0];
+
+                    // Always preserve manual-only fields
+                    entry.sleepScore     = existing != null ? existing.sleepScore : 0;
+                    entry.stressScore    = existing != null ? existing.stressScore : 0;
+                    entry.currentHeartRate = 0;
+
+                    // Preserve override flags (cleared if new day)
+                    entry.overrideSteps         = ref != null && ref.overrideSteps;
+                    entry.overrideDistance      = ref != null && ref.overrideDistance;
+                    entry.overrideCalories      = ref != null && ref.overrideCalories;
+                    entry.overrideActiveMinutes = ref != null && ref.overrideActiveMinutes;
+                    entry.overrideHeartRate     = ref != null && ref.overrideHeartRate;
+                    entry.overrideSleepHours    = ref != null && ref.overrideSleepHours;
+
+                    entry.timestamp = System.currentTimeMillis();
+                    saveManualPhysicalData(entry);
+                    if (onComplete != null) onComplete.run();
+                });
+            }
+        };
+
+        // Activity
+        fitbitApi.getTodayActivity(bearer, today).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JsonObject summary = response.body().getAsJsonObject("summary");
+                        steps[0]          = summary.get("steps").getAsInt();
+                        caloriesBurned[0] = summary.get("caloriesOut").getAsInt();
+                        floors[0]         = summary.has("floors")
+                                ? summary.get("floors").getAsInt() : 0;
+                        if (summary.has("activeZoneMinutes")) {
+                            JsonObject azm = summary.getAsJsonObject("activeZoneMinutes");
+                            activeMinutes[0] = azm.has("totalMinutes")
+                                    ? azm.get("totalMinutes").getAsInt() : 0;
+                        }
+                        if (activeMinutes[0] == 0) {
+                            activeMinutes[0] = summary.get("fairlyActiveMinutes").getAsInt()
+                                    + summary.get("veryActiveMinutes").getAsInt();
+                        }
+                        if (summary.has("distances")) {
+                            com.google.gson.JsonArray distances =
+                                    summary.getAsJsonArray("distances");
+                            for (int i = 0; i < distances.size(); i++) {
+                                JsonObject d = distances.get(i).getAsJsonObject();
+                                if ("total".equals(d.get("activity").getAsString())) {
+                                    distanceKm[0] = d.get("distance").getAsDouble();
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("FITBIT_BG", "Activity error: " + e.getMessage());
+                    }
+                }
+                checkDone.run();
+            }
+            @Override public void onFailure(Call<JsonObject> call, Throwable t) {
+                android.util.Log.e("FITBIT_BG", "Activity failed: " + t.getMessage());
+                checkDone.run();
+            }
+        });
+
+        // Heart rate
+        fitbitApi.getTodayHeartRate(bearer, today).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        com.google.gson.JsonArray arr =
+                                response.body().getAsJsonArray("activities-heart");
+                        if (arr != null && arr.size() > 0) {
+                            JsonObject value = arr.get(0).getAsJsonObject()
+                                    .getAsJsonObject("value");
+                            if (value.has("restingHeartRate")) {
+                                heartRate[0] = value.get("restingHeartRate").getAsInt();
+                            }
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("FITBIT_BG", "HR error: " + e.getMessage());
+                    }
+                }
+                checkDone.run();
+            }
+            @Override public void onFailure(Call<JsonObject> call, Throwable t) {
+                android.util.Log.e("FITBIT_BG", "HR failed: " + t.getMessage());
+                checkDone.run();
+            }
+        });
+
+        // Sleep
+        fitbitApi.getTodaySleep(bearer, today).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JsonObject summary = response.body().getAsJsonObject("summary");
+                        if (summary != null && summary.has("totalMinutesAsleep")) {
+                            int mins = summary.get("totalMinutesAsleep").getAsInt();
+                            sleepHours[0] = Math.round((mins / 60.0) * 10.0) / 10.0;
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("FITBIT_BG", "Sleep error: " + e.getMessage());
+                    }
+                }
+                checkDone.run();
+            }
+            @Override public void onFailure(Call<JsonObject> call, Throwable t) {
+                android.util.Log.e("FITBIT_BG", "Sleep failed: " + t.getMessage());
+                checkDone.run();
+            }
+        });
+    }
+
     // ─── Goals ────────────────────────────────────────────────────────────────
     public LiveData<UserGoals> getUserGoals() {
         return userGoalsDao.getGoals(uid());
@@ -325,7 +500,6 @@ public class HealthRepository {
 
     // ─── Wellness quote ───────────────────────────────────────────────────────
     public LiveData<String> getWellnessQuote() {
-        // Only fetch if we haven't got one yet this session
         if (cachedQuote.getValue() != null) return cachedQuote;
 
         quoteApi.getTodayQuote().enqueue(new Callback<JsonArray>() {

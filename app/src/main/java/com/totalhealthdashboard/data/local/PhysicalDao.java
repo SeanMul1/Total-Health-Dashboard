@@ -14,4 +14,7 @@ public interface PhysicalDao {
 
     @Query("SELECT * FROM physical_entries WHERE userId = :userId")
     LiveData<PhysicalEntry> getPhysicalEntry(String userId);
+
+    @Query("SELECT * FROM physical_entries WHERE userId = :userId")
+    PhysicalEntry getPhysicalEntrySync(String userId);
 }
