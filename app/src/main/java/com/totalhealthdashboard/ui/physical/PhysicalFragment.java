@@ -77,6 +77,7 @@ public class PhysicalFragment extends Fragment {
             }
         });
 
+        // Fitbit button
         btnFitbit.setText(authManager.isConnected() ? "Sync Fitbit Data" : "Connect Fitbit");
         btnFitbit.setOnClickListener(v -> {
             if (authManager.isConnected()) {
@@ -126,11 +127,103 @@ public class PhysicalFragment extends Fragment {
             }
         });
 
+        // ── Health Connect — commented out pending registration fix ──────────
+        // healthConnectLauncher = registerForActivityResult(
+        //         androidx.health.connect.client.PermissionController
+        //                 .createRequestPermissionResultContract(),
+        //         granted -> {
+        //             if (granted.containsAll(HealthConnectHelper.PERMISSIONS)) {
+        //                 Toast.makeText(getContext(),
+        //                         "Health Connect connected! Reading data...",
+        //                         Toast.LENGTH_SHORT).show();
+        //                 HealthConnectHelper.readData(requireContext(),
+        //                         new HealthConnectHelper.Callback() {
+        //                             @Override
+        //                             public void onData(int steps, double distanceKm, int calories,
+        //                                                int heartRate, double sleepHours, int floors) {
+        //                                 saveHealthConnectData(steps, distanceKm, calories,
+        //                                         heartRate, sleepHours, floors);
+        //                             }
+        //                             @Override
+        //                             public void onError(String message) {
+        //                                 requireActivity().runOnUiThread(() ->
+        //                                         Toast.makeText(getContext(),
+        //                                                 "Error: " + message, Toast.LENGTH_SHORT).show());
+        //                             }
+        //                             @Override public void onPermissionRequired() {}
+        //                         });
+        //             } else {
+        //                 Toast.makeText(getContext(),
+        //                         "Some permissions were denied", Toast.LENGTH_SHORT).show();
+        //             }
+        //         }
+        // );
+        //
+        // view.findViewById(R.id.btn_health_connect).setOnClickListener(v -> {
+        //     if (!HealthConnectHelper.isAvailable(requireContext())) {
+        //         Toast.makeText(getContext(),
+        //                 "Health Connect not available on this device",
+        //                 Toast.LENGTH_SHORT).show();
+        //         return;
+        //     }
+        //     HealthConnectHelper.checkPermissionsAndRead(requireContext(),
+        //             new HealthConnectHelper.Callback() {
+        //                 @Override
+        //                 public void onData(int steps, double distanceKm, int calories,
+        //                                    int heartRate, double sleepHours, int floors) {
+        //                     saveHealthConnectData(steps, distanceKm, calories,
+        //                             heartRate, sleepHours, floors);
+        //                 }
+        //                 @Override
+        //                 public void onError(String message) {
+        //                     requireActivity().runOnUiThread(() ->
+        //                             Toast.makeText(getContext(),
+        //                                     "Error: " + message, Toast.LENGTH_SHORT).show());
+        //                 }
+        //                 @Override
+        //                 public void onPermissionRequired() {
+        //                     healthConnectLauncher.launch(HealthConnectHelper.PERMISSIONS);
+        //                 }
+        //             });
+        // });
+        // ── End Health Connect ───────────────────────────────────────────────
+
+        // Manual entry button
         view.findViewById(R.id.btn_manual_entry)
                 .setOnClickListener(v -> showManualEntryDialog());
 
         return view;
     }
+
+    // ─── Health Connect save — commented out ──────────────────────────────────
+    // private void saveHealthConnectData(int steps, double distanceKm, int calories,
+    //                                    int heartRate, double sleepHours, int floors) {
+    //     repo.getPhysicalEntry().observe(getViewLifecycleOwner(), existing -> {
+    //         PhysicalEntry entry      = new PhysicalEntry();
+    //         entry.steps              = steps;
+    //         entry.distanceKm         = distanceKm;
+    //         entry.caloriesBurned     = calories;
+    //         entry.heartRate          = heartRate;
+    //         entry.sleepHours         = sleepHours;
+    //         entry.floors             = floors;
+    //         entry.activeMinutes      = existing != null ? existing.activeMinutes : 0;
+    //         entry.sleepScore         = existing != null ? existing.sleepScore : 0;
+    //         entry.stressScore        = existing != null ? existing.stressScore : 0;
+    //         entry.overrideSteps      = existing != null && existing.overrideSteps;
+    //         entry.overrideDistance   = existing != null && existing.overrideDistance;
+    //         entry.overrideCalories   = existing != null && existing.overrideCalories;
+    //         entry.overrideHeartRate  = existing != null && existing.overrideHeartRate;
+    //         entry.overrideSleepHours = existing != null && existing.overrideSleepHours;
+    //         entry.timestamp          = System.currentTimeMillis();
+    //         repo.saveManualPhysicalData(entry);
+    //         requireActivity().runOnUiThread(() -> {
+    //             tvDataSource.setText("  ✓ HEALTH CONNECT SYNCED  ");
+    //             tvDataSource.setTextColor(0xFF4CAF50);
+    //             Toast.makeText(getContext(),
+    //                     "Health Connect data synced!", Toast.LENGTH_SHORT).show();
+    //         });
+    //     });
+    // }
 
     // ─── Auto-refresh ─────────────────────────────────────────────────────────
 
@@ -225,7 +318,6 @@ public class PhysicalFragment extends Fragment {
         addTitle(layout, "Enter Today's Data",
                 "Toggle 'Override Fitbit' to lock a value and stop auto-sync overwriting it");
 
-        // Override flags
         final boolean[] overrideSteps  = {false};
         final boolean[] overrideDist   = {false};
         final boolean[] overrideCal    = {false};
@@ -233,7 +325,6 @@ public class PhysicalFragment extends Fragment {
         final boolean[] overrideHR     = {false};
         final boolean[] overrideSleep  = {false};
 
-        // Switch references so observer can update them
         final Switch[] swSteps  = {null};
         final Switch[] swDist   = {null};
         final Switch[] swCal    = {null};
@@ -334,7 +425,6 @@ public class PhysicalFragment extends Fragment {
         });
         layout.addView(sbStress);
 
-        // Pre-fill with saved values and restore override states including switch UI
         repo.getPhysicalEntry().observe(getViewLifecycleOwner(), entry -> {
             if (entry != null) {
                 etSteps.setText(entry.steps == 0 ? "" : String.valueOf(entry.steps));
@@ -346,7 +436,6 @@ public class PhysicalFragment extends Fragment {
                 if (entry.sleepScore > 0) sbSleep.setProgress(entry.sleepScore - 1);
                 if (entry.stressScore > 0) sbStress.setProgress(entry.stressScore - 1);
 
-                // Restore flags
                 overrideSteps[0]  = entry.overrideSteps;
                 overrideDist[0]   = entry.overrideDistance;
                 overrideCal[0]    = entry.overrideCalories;
@@ -354,7 +443,6 @@ public class PhysicalFragment extends Fragment {
                 overrideHR[0]     = entry.overrideHeartRate;
                 overrideSleep[0]  = entry.overrideSleepHours;
 
-                // Update switch UI to match saved state
                 if (swSteps[0]  != null) updateSwitch(swSteps[0],  entry.overrideSteps);
                 if (swDist[0]   != null) updateSwitch(swDist[0],   entry.overrideDistance);
                 if (swCal[0]    != null) updateSwitch(swCal[0],    entry.overrideCalories);
@@ -406,7 +494,6 @@ public class PhysicalFragment extends Fragment {
             dialog.dismiss();
             Toast.makeText(getContext(), "Data saved", Toast.LENGTH_SHORT).show();
 
-            // If any override turned off re-sync Fitbit immediately
             boolean anyOverrideTurnedOff = !overrideSteps[0] || !overrideDist[0]
                     || !overrideCal[0] || !overrideActive[0]
                     || !overrideHR[0] || !overrideSleep[0];

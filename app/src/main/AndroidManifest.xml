@@ -3,6 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_DISTANCE"/>
+    <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED"/>
+
+<!--    <queries>-->
+<!--        <package android:name="com.google.android.apps.healthdata"/>-->
+<!--        <package android:name="com.google.android.healthconnect.controller"/>-->
+<!--    </queries>-->
 
     <application
         android:allowBackup="true"
@@ -15,7 +26,10 @@
         android:theme="@style/Theme.TotalHealthDashboard"
         tools:targetApi="31">
 
-        <!-- Fitbit OAuth callback handler -->
+<!--        <meta-data-->
+<!--            android:name="health_connect_client_info"-->
+<!--            android:value=""/>-->
+
         <activity
             android:name=".ui.physical.FitbitCallbackActivity"
             android:exported="true"
@@ -43,7 +57,11 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:exported="false"/>
+            android:exported="false">
+<!--            <intent-filter>-->
+<!--                <action android:name="androidx.health.connect.client.SHOW_PERMISSIONS_RATIONALE"/>-->
+<!--            </intent-filter>-->
+        </activity>
 
     </application>
 
