@@ -10,15 +10,17 @@ import androidx.room.RoomDatabase;
                 JournalEntry.class,
                 NutritionEntry.class,
                 PhysicalEntry.class,
-                UserGoals.class
+                UserGoals.class,
+                PhysicalHistoryEntry.class
         },
-        version = 9,
+        version = 12,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase instance;
 
+    public abstract PhysicalHistoryDao physicalHistoryDao();
     public abstract JournalDao journalDao();
     public abstract NutritionDao nutritionDao();
     public abstract PhysicalDao physicalDao();

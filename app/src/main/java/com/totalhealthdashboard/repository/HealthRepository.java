@@ -35,6 +35,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
+import com.totalhealthdashboard.data.local.PhysicalHistoryDao;
+import com.totalhealthdashboard.data.local.PhysicalHistoryEntry;
 
 public class HealthRepository {
 
@@ -43,6 +45,7 @@ public class HealthRepository {
     private JournalDao journalDao;
     private NutritionDao nutritionDao;
     private PhysicalDao physicalDao;
+    private PhysicalHistoryDao physicalHistoryDao;
     private UserGoalsDao userGoalsDao;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -105,6 +108,7 @@ public class HealthRepository {
         journalDao   = db.journalDao();
         nutritionDao = db.nutritionDao();
         physicalDao  = db.physicalDao();
+        physicalHistoryDao = db.physicalHistoryDao();
         userGoalsDao = db.userGoalsDao();
         prefs = context.getSharedPreferences("health_prefs_" + uid(),
                 Context.MODE_PRIVATE);
@@ -186,6 +190,11 @@ public class HealthRepository {
         Type type = new TypeToken<List<NutritionData>>(){}.getType();
         List<NutritionData> list = gson.fromJson(json, type);
         frequentFoods.postValue(new ArrayList<>(list.subList(0, Math.min(list.size(), 5))));
+    }
+
+
+    public LiveData<List<NutritionEntry>> getNutritionHistoryForDays(long sevenDaysAgo) {
+        return nutritionDao.getEntriesFrom(uid(), sevenDaysAgo);
     }
 
     // ─── Food search ──────────────────────────────────────────────────────────
@@ -314,6 +323,172 @@ public class HealthRepository {
         executor.execute(() -> physicalDao.insertOrUpdate(entry));
     }
 
+    public LiveData<List<PhysicalHistoryEntry>> getPhysicalHistory() {
+        return physicalHistoryDao.getLast7Days(uid());
+    }
+
+    public void savePhysicalSnapshot(PhysicalEntry current) {
+        executor.execute(() -> {
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            long startOfDay = cal.getTimeInMillis();
+            long weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L);
+
+            PhysicalHistoryEntry existing =
+                    physicalHistoryDao.getEntryForDay(uid(), startOfDay);
+
+            // Get goals synchronously
+            UserGoals g = userGoalsDao.getGoalsSync(uid());
+            if (g == null) g = new UserGoals();
+
+            // Get diet data synchronously
+            int caloriesConsumed = nutritionDao.getTotalCaloriesTodaySync(uid(), startOfDay);
+            double proteinConsumed = nutritionDao.getTotalProteinTodaySync(uid(), startOfDay);
+            double carbsConsumed   = nutritionDao.getTotalCarbsTodaySync(uid(), startOfDay);
+            double fatConsumed     = nutritionDao.getTotalFatTodaySync(uid(), startOfDay);
+
+            // Get mental data synchronously
+            float moodAvg = journalDao.getAverageMoodSync(uid(), weekAgo);
+            int journalCount = journalDao.getEntryCountSync(uid(), weekAgo);
+
+            // Calculate physical score
+            int physScore = calculateSnapshotScore(current, g);
+
+            // Calculate diet score
+            int dietScore = calculateDietSnapshotScore(
+                    caloriesConsumed, proteinConsumed, carbsConsumed, fatConsumed, g);
+
+            // Calculate mental score
+            int mentalScore = calculateMentalSnapshotScore(moodAvg, journalCount, g);
+
+            // Overall = average of three categories
+            int overallScore = (physScore + dietScore + mentalScore) / 3;
+
+            PhysicalHistoryEntry snapshot = new PhysicalHistoryEntry();
+            snapshot.userId          = uid();
+            snapshot.date            = startOfDay;
+            snapshot.steps           = current.steps;
+            snapshot.distanceKm      = current.distanceKm;
+            snapshot.caloriesBurned  = current.caloriesBurned;
+            snapshot.activeMinutes   = current.activeMinutes;
+            snapshot.floors          = current.floors;
+            snapshot.heartRate       = current.heartRate;
+            snapshot.sleepHours      = current.sleepHours;
+            snapshot.sleepScore      = current.sleepScore;
+            snapshot.stressScore     = current.stressScore;
+            snapshot.dailyScore      = physScore;
+            snapshot.overallScore    = overallScore;
+            snapshot.caloriesConsumed = caloriesConsumed;
+            snapshot.moodScore       = moodAvg;
+            snapshot.journalCount    = journalCount;
+            snapshot.timestamp       = System.currentTimeMillis();
+
+            if (existing != null) snapshot.id = existing.id;
+            physicalHistoryDao.insert(snapshot);
+        });
+    }
+
+    private int calculateDietSnapshotScore(int calories, double protein,
+                                           double carbs, double fat, UserGoals g) {
+        int total = 0;
+        int count = 0;
+
+        if (g.caloriesEnabled && g.caloriesGoal > 0 && calories > 0) {
+            double ratio = (double) calories / g.caloriesGoal;
+            int s;
+            if (ratio >= 0.9 && ratio <= 1.1) s = 100;
+            else if (ratio < 0.9) s = (int)(ratio / 0.9 * 100);
+            else s = Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += s;
+            count++;
+        }
+        if (g.proteinEnabled && g.proteinGoal > 0 && protein > 0) {
+            total += (int) Math.min((protein / g.proteinGoal) * 100, 100);
+            count++;
+        }
+        if (g.carbsEnabled && g.carbsGoal > 0 && carbs > 0) {
+            double ratio = carbs / g.carbsGoal;
+            int s = ratio >= 0.9 && ratio <= 1.1 ? 100
+                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
+                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += s;
+            count++;
+        }
+        if (g.fatEnabled && g.fatGoal > 0 && fat > 0) {
+            double ratio = fat / g.fatGoal;
+            int s = ratio >= 0.9 && ratio <= 1.1 ? 100
+                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
+                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
+            total += s;
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
+    private int calculateMentalSnapshotScore(float moodAvg, int journalCount, UserGoals g) {
+        int total = 0;
+        int count = 0;
+
+        if (g.moodEnabled && g.moodGoal > 0 && moodAvg > 0) {
+            total += (int) Math.min((moodAvg / g.moodGoal) * 100, 100);
+            count++;
+        }
+        if (g.journalDaysEnabled && g.journalDaysGoal > 0) {
+            total += Math.min((journalCount * 100) / g.journalDaysGoal, 100);
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
+    private int calculateSnapshotScore(PhysicalEntry e, UserGoals g) {
+        int total = 0;
+        int count = 0;
+
+        if (g.stepsEnabled && e.steps > 0) {
+            int goal = g.stepsGoal > 0 ? g.stepsGoal : 10000;
+            total += Math.min((e.steps * 100) / goal, 100);
+            count++;
+        }
+        if (g.caloriesEnabled && e.caloriesBurned > 0) {
+            int goal = g.caloriesGoal > 0 ? g.caloriesGoal : 2000;
+            total += (int) Math.min((double) e.caloriesBurned / goal * 100, 100);
+            count++;
+        }
+        if (g.activeMinutesEnabled && e.activeMinutes > 0) {
+            int goal = g.activeMinutesGoal > 0 ? g.activeMinutesGoal : 30;
+            total += Math.min((e.activeMinutes * 100) / goal, 100);
+            count++;
+        }
+        if (g.sleepHoursEnabled && e.sleepHours > 0) {
+            double goal = g.sleepHoursGoal > 0 ? g.sleepHoursGoal : 8.0;
+            total += (int) Math.min((e.sleepHours / goal) * 100, 100);
+            count++;
+        }
+        if (g.sleepScoreEnabled && e.sleepScore > 0) {
+            int goal = g.sleepScoreGoal > 0 ? g.sleepScoreGoal : 8;
+            total += Math.min((e.sleepScore * 100) / goal, 100);
+            count++;
+        }
+        if (g.stressEnabled && e.stressScore > 0) {
+            total += Math.min((e.stressScore * 100) / 10, 100);
+            count++;
+        }
+        if (g.heartRateEnabled && e.heartRate > 0) {
+            int goal = g.heartRateGoal > 0 ? g.heartRateGoal : 70;
+            int hrScore = e.heartRate <= goal ? 100
+                    : Math.max(0, 100 - (e.heartRate - goal) * 5);
+            total += hrScore;
+            count++;
+        }
+
+        return count == 0 ? 0 : total / count;
+    }
+
     // ─── Fitbit background sync ───────────────────────────────────────────────
     public void syncFitbitInBackground(String accessToken, Runnable onComplete) {
         String bearer = "Bearer " + accessToken;
@@ -384,6 +559,7 @@ public class HealthRepository {
 
                     entry.timestamp = System.currentTimeMillis();
                     saveManualPhysicalData(entry);
+                    savePhysicalSnapshot(entry);
                     if (onComplete != null) onComplete.run();
                 });
             }

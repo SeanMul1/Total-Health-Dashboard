@@ -30,4 +30,10 @@ public interface JournalDao {
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId ORDER BY timestamp DESC LIMIT :limit")
     LiveData<List<JournalEntry>> getRecentEntries(String userId, int limit);
+
+    @Query("SELECT COALESCE(AVG(moodScore), 0) FROM journal_entries WHERE userId = :userId AND timestamp >= :since")
+    float getAverageMoodSync(String userId, long since);
+
+    @Query("SELECT COUNT(*) FROM journal_entries WHERE userId = :userId AND timestamp >= :since")
+    int getEntryCountSync(String userId, long since);
 }

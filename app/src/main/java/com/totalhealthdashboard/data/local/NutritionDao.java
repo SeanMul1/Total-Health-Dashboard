@@ -30,4 +30,20 @@ public interface NutritionDao {
 
     @Query("SELECT SUM(fat) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
     LiveData<Double> getTotalFatToday(String userId, long startOfDay);
+
+    @Query("SELECT * FROM nutrition_entries WHERE userId = :userId " +
+            "AND timestamp >= :from ORDER BY timestamp ASC")
+    LiveData<List<NutritionEntry>> getEntriesFrom(String userId, long from);
+
+    @Query("SELECT COALESCE(SUM(calories), 0) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    int getTotalCaloriesTodaySync(String userId, long startOfDay);
+
+    @Query("SELECT COALESCE(SUM(protein), 0) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    double getTotalProteinTodaySync(String userId, long startOfDay);
+
+    @Query("SELECT COALESCE(SUM(carbs), 0) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    double getTotalCarbsTodaySync(String userId, long startOfDay);
+
+    @Query("SELECT COALESCE(SUM(fat), 0) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
+    double getTotalFatTodaySync(String userId, long startOfDay);
 }

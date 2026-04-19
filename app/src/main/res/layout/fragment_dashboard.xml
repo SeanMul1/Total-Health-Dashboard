@@ -556,6 +556,18 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <Button
+                android:id="@+id/btn_view_history"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="📅  View History"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:backgroundTint="#1A1A1A"
+                android:textColor="#FFFFFF"
+                android:layout_marginTop="12dp"
+                app:cornerRadius="12dp"/>
+
             <!-- Data source note -->
             <TextView
                 android:layout_width="match_parent"

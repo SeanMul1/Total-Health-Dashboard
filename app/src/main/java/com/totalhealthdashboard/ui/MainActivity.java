@@ -17,6 +17,7 @@ import com.totalhealthdashboard.ui.physical.PhysicalFragment;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import com.totalhealthdashboard.ui.history.HistoryFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +27,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getWindow().setStatusBarColor(android.graphics.Color.WHITE);
+        getWindow().getDecorView().setSystemUiVisibility(
+                android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

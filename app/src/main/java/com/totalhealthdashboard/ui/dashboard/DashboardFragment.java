@@ -22,6 +22,8 @@ import com.totalhealthdashboard.data.models.FitbitData;
 import com.totalhealthdashboard.repository.HealthRepository;
 import com.totalhealthdashboard.ui.LoginActivity;
 import java.util.Locale;
+import com.totalhealthdashboard.ui.history.HistoryFragment;
+import com.totalhealthdashboard.ui.MainActivity;
 
 public class DashboardFragment extends Fragment {
 
@@ -105,17 +107,17 @@ public class DashboardFragment extends Fragment {
             recalculateScores();
         });
 
-        repo.getTotalProtein().observe(getViewLifecycleOwner(), p -> {
+        repo.getTotalProteinToday().observe(getViewLifecycleOwner(), p -> {
             latestProtein = p;
             recalculateScores();
         });
 
-        repo.getTotalCarbs().observe(getViewLifecycleOwner(), c -> {
+        repo.getTotalCarbsToday().observe(getViewLifecycleOwner(), c -> {
             latestCarbs = c;
             recalculateScores();
         });
 
-        repo.getTotalFat().observe(getViewLifecycleOwner(), f -> {
+        repo.getTotalFatToday().observe(getViewLifecycleOwner(), f -> {
             latestFat = f;
             recalculateScores();
         });
@@ -153,6 +155,9 @@ public class DashboardFragment extends Fragment {
                 nav.setSelectedItemId(R.id.nav_mental));
         view.findViewById(R.id.card_goals).setOnClickListener(v ->
                 nav.setSelectedItemId(R.id.nav_goals));
+        view.findViewById(R.id.btn_view_history).setOnClickListener(v ->
+                ((MainActivity) requireActivity())
+                        .loadFragment(new HistoryFragment(), true));
 
         // Set password option for Google-only users
         TextView btnSetPassword = view.findViewById(R.id.btn_set_password);
