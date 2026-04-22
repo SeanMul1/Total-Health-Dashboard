@@ -36,4 +36,7 @@ public interface JournalDao {
 
     @Query("SELECT COUNT(*) FROM journal_entries WHERE userId = :userId AND timestamp >= :since")
     int getEntryCountSync(String userId, long since);
+
+    @Query("DELETE FROM nutrition_entries WHERE userId = :userId")
+    void deleteAllForUser(String userId);
 }

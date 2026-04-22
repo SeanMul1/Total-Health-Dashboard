@@ -626,6 +626,39 @@ public class HealthRepository {
         return cachedQuote;
     }
 
+    // ─── delete account ──────────────────────────────────────────────────────────────
+    public void deleteAllUserData() {
+        String userId = uid();
+        executor.execute(() -> {
+            journalDao.deleteAllForUser(userId);
+            nutritionDao.deleteAllForUser(userId);
+            physicalDao.deleteAllForUser(userId);
+            physicalHistoryDao.deleteAllForUser(userId);
+            userGoalsDao.deleteAllForUser(userId);
+        });
+    }
+
+    public void deleteAccount(Runnable onSuccess, java.util.function.Consumer<String> onError) {
+        com.google.firebase.auth.FirebaseUser user =
+                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            onError.accept("No user signed in");
+            return;
+        }
+        user.delete()
+                .addOnSuccessListener(unused -> {
+                    deleteAllUserData();
+                    onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    if (e instanceof com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+                        onError.accept("For security, please log out and log back in before deleting your account.");
+                    } else {
+                        onError.accept(e.getMessage());
+                    }
+                });
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
     private long getStartOfDay() {
         Calendar cal = Calendar.getInstance();

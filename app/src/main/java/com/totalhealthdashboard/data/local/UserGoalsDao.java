@@ -17,4 +17,7 @@ public interface UserGoalsDao {
 
     @Query("SELECT * FROM user_goals WHERE userId = :userId")
     UserGoals getGoalsSync(String userId);
+
+    @Query("DELETE FROM user_goals WHERE userId = :userId")
+    void deleteAllForUser(String userId);
 }

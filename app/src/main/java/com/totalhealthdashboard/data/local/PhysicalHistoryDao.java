@@ -22,4 +22,7 @@ public interface PhysicalHistoryDao {
     @Query("SELECT * FROM physical_history WHERE userId = :userId " +
             "AND date >= :startOfDay LIMIT 1")
     PhysicalHistoryEntry getEntryForDay(String userId, long startOfDay);
+
+    @Query("DELETE FROM physical_history WHERE userId = :userId")
+    void deleteAllForUser(String userId);
 }

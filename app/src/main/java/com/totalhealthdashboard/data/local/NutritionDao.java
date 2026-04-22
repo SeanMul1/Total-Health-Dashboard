@@ -46,4 +46,7 @@ public interface NutritionDao {
 
     @Query("SELECT COALESCE(SUM(fat), 0) FROM nutrition_entries WHERE userId = :userId AND timestamp >= :startOfDay")
     double getTotalFatTodaySync(String userId, long startOfDay);
+
+    @Query("DELETE FROM nutrition_entries WHERE userId = :userId")
+    void deleteAllForUser(String userId);
 }

@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -25,6 +26,11 @@ import com.totalhealthdashboard.ui.LoginActivity;
 import com.totalhealthdashboard.ui.MainActivity;
 import com.totalhealthdashboard.ui.history.HistoryFragment;
 import java.util.Locale;
+import com.totalhealthdashboard.data.local.NutritionEntry;
+import com.totalhealthdashboard.data.local.PhysicalHistoryEntry;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class DashboardFragment extends Fragment {
 
@@ -41,6 +47,12 @@ public class DashboardFragment extends Fragment {
 
     private TextView tvOverallScore, tvSubPhysical, tvSubDiet, tvSubMental;
     private TextView tvPhysScore, tvDietScore, tvMentalScore, tvGoalsScore;
+
+    private LinearLayout metricSelectorRow;
+    private LinearLayout dashboardChartContainer;
+    private List<com.totalhealthdashboard.data.local.PhysicalHistoryEntry> physicalHistory;
+    private List<com.totalhealthdashboard.data.local.NutritionEntry> nutritionHistory;
+    private String selectedMetric = "Steps";
 
     @Nullable
     @Override
@@ -76,8 +88,47 @@ public class DashboardFragment extends Fragment {
         TextView tvMoodDash  = view.findViewById(R.id.tv_dash_mood);
         TextView tvGoalsDash = view.findViewById(R.id.tv_dash_goals);
 
+
         repo = HealthRepository.getInstance();
         repo.init(requireContext());
+        metricSelectorRow      = view.findViewById(R.id.metric_selector_row);
+        dashboardChartContainer = view.findViewById(R.id.dashboard_chart_container);
+
+// Build metric selector buttons
+        String[] metrics = {"Steps", "Cal Burned", "Sleep", "Active", "Floors", "Heart Rate", "Cal Intake"};
+        for (String metric : metrics) {
+            TextView btn = new TextView(requireContext());
+            btn.setText(metric);
+            btn.setTextSize(12);
+            btn.setPadding(28, 16, 28, 16);
+            btn.setTypeface(null, android.graphics.Typeface.BOLD);
+            btn.setBackground(buildSelectorBackground(metric.equals(selectedMetric)));
+            btn.setTextColor(metric.equals(selectedMetric) ? 0xFFFFFFFF : 0xFF9E9E9E);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            p.setMargins(0, 0, 8, 0);
+            btn.setLayoutParams(p);
+            btn.setOnClickListener(v -> {
+                selectedMetric = metric;
+                updateSelectorButtons();
+                buildDashboardChart();
+            });
+            metricSelectorRow.addView(btn);
+        }
+
+// Observe physical history
+        repo.getPhysicalHistory().observe(getViewLifecycleOwner(), entries -> {
+            physicalHistory = entries;
+            buildDashboardChart();
+        });
+
+// Observe nutrition history for cal intake
+        List<Long> last7 = getLast7DayStarts();
+        repo.getNutritionHistoryForDays(last7.get(0)).observe(getViewLifecycleOwner(), entries -> {
+            nutritionHistory = entries;
+            buildDashboardChart();
+        });
 
         repo.getUserGoals().observe(getViewLifecycleOwner(), goals -> {
             latestGoals = goals;
@@ -168,6 +219,9 @@ public class DashboardFragment extends Fragment {
             startActivity(new Intent(requireContext(), LoginActivity.class));
             requireActivity().finish();
         });
+
+        view.findViewById(R.id.btn_delete_account).setOnClickListener(v ->
+                showDeleteAccountDialog());
 
         return view;
     }
@@ -309,5 +363,237 @@ public class DashboardFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    // graph methods
+    private void updateSelectorButtons() {
+        for (int i = 0; i < metricSelectorRow.getChildCount(); i++) {
+            TextView btn = (TextView) metricSelectorRow.getChildAt(i);
+            boolean selected = btn.getText().toString().equals(selectedMetric);
+            btn.setBackground(buildSelectorBackground(selected));
+            btn.setTextColor(selected ? 0xFFFFFFFF : 0xFF9E9E9E);
+        }
+    }
+
+    private android.graphics.drawable.GradientDrawable buildSelectorBackground(boolean selected) {
+        android.graphics.drawable.GradientDrawable bg =
+                new android.graphics.drawable.GradientDrawable();
+        bg.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+        bg.setCornerRadius(40f);
+        bg.setColor(selected ? 0xFF00B0B9 : 0xFFF5F5F5);
+        return bg;
+    }
+
+    private void buildDashboardChart() {
+        if (dashboardChartContainer == null) return;
+        dashboardChartContainer.removeAllViews();
+
+        List<Long> last7Days = getLast7DayStarts();
+        float[] values = new float[7];
+
+        if ("Cal Intake".equals(selectedMetric)) {
+            // Get from nutrition history
+            for (int i = 0; i < 7; i++) {
+                long dayStart = last7Days.get(i);
+                long dayEnd   = dayStart + 86400000L;
+                int total = 0;
+                if (nutritionHistory != null) {
+                    for (NutritionEntry e : nutritionHistory) {
+                        if (e.timestamp >= dayStart && e.timestamp < dayEnd) {
+                            total += e.calories;
+                        }
+                    }
+                }
+                values[i] = total;
+            }
+        } else {
+            // Get from physical history
+            if (physicalHistory == null || physicalHistory.isEmpty()) {
+                showEmptyChart();
+                return;
+            }
+            for (int i = 0; i < 7; i++) {
+                long dayStart = last7Days.get(i);
+                values[i] = 0;
+                for (PhysicalHistoryEntry e : physicalHistory) {
+                    if (e.date == dayStart) {
+                        switch (selectedMetric) {
+                            case "Steps":       values[i] = e.steps; break;
+                            case "Cal Burned":  values[i] = e.caloriesBurned; break;
+                            case "Sleep":       values[i] = (float) e.sleepHours; break;
+                            case "Active":      values[i] = e.activeMinutes; break;
+                            case "Floors":      values[i] = e.floors; break;
+                            case "Heart Rate":  values[i] = e.heartRate; break;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Find max for scaling
+        float maxVal = 1f;
+        for (float v : values) if (v > maxVal) maxVal = v;
+
+        java.text.SimpleDateFormat sdf =
+                new java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault());
+
+        for (int i = 0; i < 7; i++) {
+            float val = values[i];
+            String dayLabel = sdf.format(new java.util.Date(last7Days.get(i)));
+
+            LinearLayout col = new LinearLayout(requireContext());
+            col.setOrientation(LinearLayout.VERTICAL);
+            col.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
+            LinearLayout.LayoutParams colParams =
+                    new LinearLayout.LayoutParams(0,
+                            LinearLayout.LayoutParams.MATCH_PARENT, 1f);
+            colParams.setMargins(4, 0, 4, 0);
+            col.setLayoutParams(colParams);
+
+            // Value label
+            TextView tvVal = new TextView(requireContext());
+            tvVal.setText(val > 0 ? formatValue(val) : "");
+            tvVal.setTextSize(8);
+            tvVal.setTextColor(0xFF9E9E9E);
+            tvVal.setGravity(android.view.Gravity.CENTER);
+            col.addView(tvVal);
+
+            // Bar
+            View bar = new View(requireContext());
+            int barHeight = val > 0 ? (int)((val / maxVal) * 140) : 4;
+            LinearLayout.LayoutParams barParams =
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT, barHeight);
+            barParams.setMargins(6, 4, 6, 0);
+            android.graphics.drawable.GradientDrawable shape =
+                    new android.graphics.drawable.GradientDrawable();
+            shape.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            shape.setCornerRadii(new float[]{8,8,8,8,0,0,0,0});
+            shape.setColor(val > 0 ? 0xFF00B0B9 : 0xFFE0E0E0);
+            bar.setBackground(shape);
+            bar.setLayoutParams(barParams);
+            col.addView(bar);
+
+            // Day label
+            TextView tvDay = new TextView(requireContext());
+            tvDay.setText(dayLabel);
+            tvDay.setTextSize(10);
+            tvDay.setTextColor(0xFF9E9E9E);
+            tvDay.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams dayParams =
+                    new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+            dayParams.setMargins(0, 4, 0, 0);
+            tvDay.setLayoutParams(dayParams);
+            col.addView(tvDay);
+
+            dashboardChartContainer.addView(col);
+        }
+    }
+
+    private void showEmptyChart() {
+        TextView tv = new TextView(requireContext());
+        tv.setText("No data yet — sync Fitbit to see your trends");
+        tv.setTextSize(12);
+        tv.setTextColor(0xFF9E9E9E);
+        tv.setGravity(android.view.Gravity.CENTER);
+        tv.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT));
+        dashboardChartContainer.addView(tv);
+    }
+
+    private String formatValue(float val) {
+        if (val >= 1000) return String.format(java.util.Locale.getDefault(), "%.0fk", val / 1000);
+        if (val == (int) val) return String.valueOf((int) val);
+        return String.format(java.util.Locale.getDefault(), "%.1f", val);
+    }
+
+    private List<Long> getLast7DayStarts() {
+        List<Long> days = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        for (int i = 6; i >= 0; i--) {
+            Calendar day = (Calendar) cal.clone();
+            day.add(Calendar.DAY_OF_YEAR, -i);
+            day.set(Calendar.HOUR_OF_DAY, 0);
+            day.set(Calendar.MINUTE, 0);
+            day.set(Calendar.SECOND, 0);
+            day.set(Calendar.MILLISECOND, 0);
+            days.add(day.getTimeInMillis());
+        }
+        return days;
+    }
+
+    // delete account
+
+    private void showDeleteAccountDialog() {
+        // Step 1 — first confirmation
+        android.app.AlertDialog step1 = new android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Delete Account")
+                .setMessage("This will permanently delete your account and all your health data including journals, food logs and history. This cannot be undone.")
+                .setPositiveButton("Continue", (d, w) -> showDeleteConfirmInput())
+                .setNegativeButton("Cancel", null)
+                .create();
+        step1.show();
+        step1.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(0xFFF44336);
+        step1.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF9E9E9E);
+    }
+
+    private void showDeleteConfirmInput() {
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(64, 48, 64, 32);
+
+        android.widget.TextView tvMsg = new android.widget.TextView(requireContext());
+        tvMsg.setText("Type DELETE in capitals to confirm permanently deleting your account");
+        tvMsg.setTextSize(14);
+        tvMsg.setTextColor(0xFFF44336);
+        tvMsg.setPadding(0, 0, 0, 16);
+        layout.addView(tvMsg);
+
+        android.widget.EditText etConfirm = new android.widget.EditText(requireContext());
+        etConfirm.setHint("DELETE");
+        etConfirm.setTextSize(16);
+        etConfirm.setPadding(24, 20, 24, 20);
+        etConfirm.setBackgroundColor(0xFFF0F0F0);
+        etConfirm.setSingleLine(true);
+        etConfirm.setTextColor(0xFF1A1A1A);
+        etConfirm.setHintTextColor(0xFFBDBDBD);
+        etConfirm.setTypeface(null, android.graphics.Typeface.BOLD);
+        layout.addView(etConfirm);
+
+        android.app.AlertDialog step2 = new android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Are you sure?")
+                .setView(layout)
+                .setPositiveButton("Delete Forever", (d, w) -> {
+                    if (!"DELETE".equals(etConfirm.getText().toString().trim())) {
+                        Toast.makeText(getContext(),
+                                "Type DELETE exactly to confirm",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    repo.deleteAccount(
+                            () -> requireActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(),
+                                        "Account deleted", Toast.LENGTH_SHORT).show();
+                                com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
+                                startActivity(new android.content.Intent(
+                                        requireContext(),
+                                        com.totalhealthdashboard.ui.LoginActivity.class));
+                                requireActivity().finish();
+                            }),
+                            error -> requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(getContext(),
+                                            "Failed: " + error + " — try logging out and back in first",
+                                            Toast.LENGTH_LONG).show())
+                    );
+                })
+                .setNegativeButton("Cancel", null)
+                .create();
+        step2.show();
+        step2.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(0xFFF44336);
+        step2.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).setTextColor(0xFF9E9E9E);
     }
 }

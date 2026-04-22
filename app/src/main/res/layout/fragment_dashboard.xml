@@ -214,6 +214,61 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- 7-Day Trends Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="7-DAY TRENDS"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#9E9E9E"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="@font/poppins_semibold"/>
+
+                <!-- Metric selector buttons -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/metric_selector_row"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"/>
+
+                </HorizontalScrollView>
+
+                <!-- Chart -->
+                <LinearLayout
+                    android:id="@+id/dashboard_chart_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:orientation="horizontal"
+                    android:gravity="bottom"/>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -608,6 +663,20 @@
                 android:padding="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:fontFamily="@font/poppins_semibold"/>
+
+            <TextView
+                android:id="@+id/btn_delete_account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete account"
+                android:textSize="13sp"
+                android:textColor="#F44336"
+                android:gravity="center"
+                android:layout_gravity="center"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:fontFamily="@font/poppins_semibold"/>
 
