@@ -8,7 +8,7 @@ public class ScoreCalculator {
     // ─── Physical ─────────────────────────────────────────────────────────────
 
     public static int calcPhysicalScore(FitbitData data, UserGoals g) {
-        if (data == null) return 0;
+        if (data == null) return -1;
         int total = 0;
         int count = 0;
 
@@ -36,12 +36,9 @@ public class ScoreCalculator {
             total += threeZoneScore(data.getFloors(), g.floorsGoal);
             count++;
         }
-        if (g.stressEnabled && data.getStressScore() > 0) {
-            total += threeZoneScore(data.getStressScore(), 10);
-            count++;
-        }
 
-        return count == 0 ? 0 : total / count;
+        // Stress is not a goal-based metric — excluded from score
+        return count == 0 ? -1 : total / count;
     }
 
     public static int calcPhysicalScoreFromEntry(
@@ -76,12 +73,9 @@ public class ScoreCalculator {
             total += threeZoneScore(floors, g.floorsGoal);
             count++;
         }
-        if (g.stressEnabled && stressScore > 0) {
-            total += threeZoneScore(stressScore, 10);
-            count++;
-        }
 
-        return count == 0 ? 0 : total / count;
+        // Stress excluded — no goal target in UI
+        return count == 0 ? -1 : total / count;
     }
 
     // ─── Diet ─────────────────────────────────────────────────────────────────
@@ -108,7 +102,7 @@ public class ScoreCalculator {
             count++;
         }
 
-        return count == 0 ? 0 : total / count;
+        return count == 0 ? -1 : total / count;
     }
 
     // ─── Mental ───────────────────────────────────────────────────────────────
@@ -126,6 +120,17 @@ public class ScoreCalculator {
             count++;
         }
 
+        return count == 0 ? -1 : total / count;
+    }
+
+    // ─── Overall — skips disabled categories ──────────────────────────────────
+
+    public static int calcOverallScore(int physScore, int dietScore, int mentalScore) {
+        int total = 0;
+        int count = 0;
+        if (physScore   >= 0) { total += physScore;   count++; }
+        if (dietScore   >= 0) { total += dietScore;   count++; }
+        if (mentalScore >= 0) { total += mentalScore; count++; }
         return count == 0 ? 0 : total / count;
     }
 
@@ -142,11 +147,8 @@ public class ScoreCalculator {
         if (ratio <= 1.0) {
             return (int)(ratio * 100);
         } else if (ratio <= 1.2) {
-            // Bonus zone — scales from 100 to 110
             return (int)(100 + (ratio - 1.0) / 0.2 * 10);
         } else {
-            // Overdoing it — decline from 110 back down
-            // At 2x goal score is around 70, at 4x goal score is around 30
             return (int) Math.max(0, 110 - (ratio - 1.2) * 50);
         }
     }
@@ -165,18 +167,15 @@ public class ScoreCalculator {
     /**
      * Heart rate scoring — lower is better but with safe floor:
      * Below 40bpm     → penalised (dangerously low)
-     * 40bpm to goal   → 100 (good zone)
+     * 40-goal bpm     → 100
      * Above goal      → loses 5 points per bpm over
      */
     private static int heartRateScore(int actual, int goal) {
         if (actual < 40) {
-            // Dangerously low — penalise
             return Math.max(0, (int)(actual / 40.0 * 80));
         } else if (actual <= goal) {
-            // At or below goal — full score
             return 100;
         } else {
-            // Above goal — lose 5 points per bpm over
             return Math.max(0, 100 - (actual - goal) * 5);
         }
     }
@@ -216,11 +215,5 @@ public class ScoreCalculator {
         double ratio = actual / goal;
         if (ratio <= 1.0) return (int)(ratio * 100);
         return Math.min(120, (int)(100 + (ratio - 1.0) * 100));
-    }
-
-    // ─── Overall ──────────────────────────────────────────────────────────────
-
-    public static int calcOverallScore(int physScore, int dietScore, int mentalScore) {
-        return (physScore + dietScore + mentalScore) / 3;
     }
 }

@@ -20,17 +20,16 @@ import com.totalhealthdashboard.R;
 import com.totalhealthdashboard.data.local.UserGoals;
 import com.totalhealthdashboard.data.models.FitbitData;
 import com.totalhealthdashboard.repository.HealthRepository;
-import com.totalhealthdashboard.ui.LoginActivity;
-import java.util.Locale;
-import com.totalhealthdashboard.ui.history.HistoryFragment;
-import com.totalhealthdashboard.ui.MainActivity;
 import com.totalhealthdashboard.repository.ScoreCalculator;
+import com.totalhealthdashboard.ui.LoginActivity;
+import com.totalhealthdashboard.ui.MainActivity;
+import com.totalhealthdashboard.ui.history.HistoryFragment;
+import java.util.Locale;
 
 public class DashboardFragment extends Fragment {
 
     private HealthRepository repo;
 
-    // Cached latest values so we can recalculate score whenever any changes
     private FitbitData latestPhysical = null;
     private Integer latestCalories    = null;
     private Double  latestProtein     = null;
@@ -40,7 +39,6 @@ public class DashboardFragment extends Fragment {
     private Integer latestJournalDays = null;
     private UserGoals latestGoals     = null;
 
-    // Score views
     private TextView tvOverallScore, tvSubPhysical, tvSubDiet, tvSubMental;
     private TextView tvPhysScore, tvDietScore, tvMentalScore, tvGoalsScore;
 
@@ -73,7 +71,6 @@ public class DashboardFragment extends Fragment {
         tvMentalScore  = view.findViewById(R.id.tv_dash_mental_score);
         tvGoalsScore   = view.findViewById(R.id.tv_dash_goals_score);
 
-        // Subtitle views
         TextView tvStepsDash = view.findViewById(R.id.tv_dash_steps);
         TextView tvCalDash   = view.findViewById(R.id.tv_dash_calories);
         TextView tvMoodDash  = view.findViewById(R.id.tv_dash_mood);
@@ -82,13 +79,11 @@ public class DashboardFragment extends Fragment {
         repo = HealthRepository.getInstance();
         repo.init(requireContext());
 
-        // Observe goals first — needed for score calculations
         repo.getUserGoals().observe(getViewLifecycleOwner(), goals -> {
             latestGoals = goals;
             recalculateScores();
         });
 
-        // Physical data
         repo.getFitbitData().observe(getViewLifecycleOwner(), data -> {
             latestPhysical = data;
             if (data != null) {
@@ -99,7 +94,6 @@ public class DashboardFragment extends Fragment {
             recalculateScores();
         });
 
-        // Diet data
         repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), total -> {
             latestCalories = total;
             tvCalDash.setText((total == null || total == 0)
@@ -123,7 +117,6 @@ public class DashboardFragment extends Fragment {
             recalculateScores();
         });
 
-        // Mental data
         repo.getAverageMoodThisWeek().observe(getViewLifecycleOwner(), avg -> {
             latestMood = avg;
             if (avg == null || avg == 0) {
@@ -140,7 +133,6 @@ public class DashboardFragment extends Fragment {
             recalculateScores();
         });
 
-        // Goals card subtitle — show how many goals are being hit
         repo.getUserGoals().observe(getViewLifecycleOwner(), goals ->
                 tvGoalsDash.setText(goals == null
                         ? "Set your goals"
@@ -171,7 +163,6 @@ public class DashboardFragment extends Fragment {
         }
         btnSetPassword.setOnClickListener(v -> showSetPasswordDialog());
 
-        // Logout
         view.findViewById(R.id.btn_logout).setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(requireContext(), LoginActivity.class));
@@ -184,55 +175,41 @@ public class DashboardFragment extends Fragment {
     // ─── Score calculation ────────────────────────────────────────────────────
 
     private void recalculateScores() {
-        // Use default goals if none saved yet
         UserGoals g = latestGoals != null ? latestGoals : new UserGoals();
 
-        int physScore   = calcPhysicalScore(g);
-        int dietScore   = calcDietScore(g);
-        int mentalScore = calcMentalScore(g);
+        int physScore   = ScoreCalculator.calcPhysicalScore(latestPhysical, g);
+        int dietScore   = ScoreCalculator.calcDietScore(
+                latestCalories  != null ? latestCalories  : 0,
+                latestProtein   != null ? latestProtein   : 0,
+                latestCarbs     != null ? latestCarbs     : 0,
+                latestFat       != null ? latestFat       : 0, g);
+        int mentalScore = ScoreCalculator.calcMentalScore(
+                latestMood          != null ? latestMood          : 0,
+                latestJournalDays   != null ? latestJournalDays   : 0, g);
 
-        // Overall = average of the three categories
-        int overall = (physScore + dietScore + mentalScore) / 3;
+        int overall = ScoreCalculator.calcOverallScore(physScore, dietScore, mentalScore);
 
-        // Update overall hero card
+        // Overall hero card
         tvOverallScore.setText(String.valueOf(overall));
         tvOverallScore.setTextColor(getScoreColour(overall));
 
-        // Update sub-scores in hero card
-        tvSubPhysical.setText(physScore + "");
-        tvSubDiet.setText(dietScore + "");
-        tvSubMental.setText(mentalScore + "");
+        // Sub-scores in hero card
+        tvSubPhysical.setText(physScore  < 0 ? "—" : String.valueOf(physScore));
+        tvSubDiet.setText(dietScore      < 0 ? "—" : String.valueOf(dietScore));
+        tvSubMental.setText(mentalScore  < 0 ? "—" : String.valueOf(mentalScore));
 
-        // Update category card scores
-        tvPhysScore.setText(physScore + "/100");
-        tvPhysScore.setTextColor(getScoreColour(physScore));
+        // Category card scores
+        tvPhysScore.setText(physScore    < 0 ? "N/A" : physScore   + "/100");
+        tvPhysScore.setTextColor(physScore < 0 ? 0xFF9E9E9E : getScoreColour(physScore));
 
-        tvDietScore.setText(dietScore + "/100");
-        tvDietScore.setTextColor(getScoreColour(dietScore));
+        tvDietScore.setText(dietScore    < 0 ? "N/A" : dietScore   + "/100");
+        tvDietScore.setTextColor(dietScore < 0 ? 0xFF9E9E9E : getScoreColour(dietScore));
 
-        tvMentalScore.setText(mentalScore + "/100");
-        tvMentalScore.setTextColor(getScoreColour(mentalScore));
+        tvMentalScore.setText(mentalScore < 0 ? "N/A" : mentalScore + "/100");
+        tvMentalScore.setTextColor(mentalScore < 0 ? 0xFF9E9E9E : getScoreColour(mentalScore));
 
         tvGoalsScore.setText(overall + "/100");
         tvGoalsScore.setTextColor(getScoreColour(overall));
-    }
-
-    private int calcPhysicalScore(UserGoals g) {
-        return ScoreCalculator.calcPhysicalScore(latestPhysical, g);
-    }
-
-    private int calcDietScore(UserGoals g) {
-        int cal  = latestCalories != null ? latestCalories : 0;
-        double p = latestProtein  != null ? latestProtein  : 0;
-        double c = latestCarbs    != null ? latestCarbs    : 0;
-        double f = latestFat      != null ? latestFat      : 0;
-        return ScoreCalculator.calcDietScore(cal, p, c, f, g);
-    }
-
-    private int calcMentalScore(UserGoals g) {
-        float mood = latestMood != null ? latestMood : 0;
-        int days   = latestJournalDays != null ? latestJournalDays : 0;
-        return ScoreCalculator.calcMentalScore(mood, days, g);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
