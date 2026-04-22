@@ -153,6 +153,7 @@ public class HealthRepository {
             totalFat.postValue((totalFat.getValue() != null
                     ? totalFat.getValue() : 0.0) + data.getFat());
             saveToFrequent(data);
+            triggerSnapshotUpdate();
         });
     }
 
@@ -171,6 +172,7 @@ public class HealthRepository {
             totalFat.postValue(Math.max(0.0,
                     (totalFat.getValue() != null ? totalFat.getValue() : 0.0)
                             - entry.fat));
+            triggerSnapshotUpdate();
         });
     }
 
@@ -267,6 +269,7 @@ public class HealthRepository {
             JournalEntry entry = new JournalEntry(
                     userId, content, System.currentTimeMillis(), moodScore);
             journalDao.insert(entry);
+            triggerSnapshotUpdate();
         });
     }
 
