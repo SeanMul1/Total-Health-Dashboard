@@ -292,7 +292,7 @@ public class HealthRepository {
     }
 
     public LiveData<List<JournalEntry>> getAllJournalEntries() {
-        return journalDao.getRecentEntries(uid(), 5);
+        return journalDao.getAllEntries(uid());
     }
 
     // ─── Nutrition entries ────────────────────────────────────────────────────

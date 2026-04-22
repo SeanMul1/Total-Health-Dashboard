@@ -290,7 +290,41 @@
                 android:layout_marginBottom="24dp"
                 app:cornerRadius="12dp"/>
 
+            <!-- Journal history section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JOURNAL HISTORY"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#9E9E9E"
+                android:letterSpacing="0.1"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_semibold"/>
+
+            <LinearLayout
+                android:id="@+id/journal_history_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+
+            <TextView
+                android:id="@+id/btn_view_all_journals"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="View all entries ▼"
+                android:textSize="13sp"
+                android:textColor="#00B0B9"
+                android:gravity="center"
+                android:padding="12dp"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackground"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/poppins_semibold"/>
+
         </LinearLayout>
+
     </ScrollView>
 
 </LinearLayout>
