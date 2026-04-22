@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import com.totalhealthdashboard.R;
 import com.totalhealthdashboard.data.local.UserGoals;
 import com.totalhealthdashboard.repository.HealthRepository;
-import com.totalhealthdashboard.ui.journal.JournalFragment;
 import java.util.Locale;
 
 public class GoalsFragment extends Fragment {
@@ -38,7 +36,7 @@ public class GoalsFragment extends Fragment {
         setupExpandToggle(view, R.id.btn_expand_diet, R.id.container_diet);
         setupExpandToggle(view, R.id.btn_expand_mental, R.id.container_mental);
 
-        // Observe and display goals
+        // Observe and display goals — only bind UI once to prevent observer overwriting toggles
         repo.getUserGoals().observe(getViewLifecycleOwner(), goals -> {
             if (goals == null) goals = new UserGoals();
             currentGoals = goals;
@@ -55,6 +53,8 @@ public class GoalsFragment extends Fragment {
                     "%,d", data.getSteps()) + " steps");
             tvActive.setText("Today: " + data.getActiveMinutes() + " min");
             tvSleep.setText("Last night: " + data.getSleepHours() + " hrs");
+            TextView tvFloors = view.findViewById(R.id.tv_progress_floors);
+            tvFloors.setText("Today: " + data.getFloors() + " floors");
         });
 
         repo.getTotalCaloriesToday().observe(getViewLifecycleOwner(), cal -> {
@@ -87,7 +87,9 @@ public class GoalsFragment extends Fragment {
     }
 
     private void bindGoals(View view, UserGoals goals) {
-        // Physical
+
+        // ── PHYSICAL ──────────────────────────────────────────────────────────
+
         bindGoalRow(view,
                 R.id.tv_goal_steps, R.id.sw_steps, R.id.btn_edit_steps,
                 "Goal: " + String.format(Locale.getDefault(), "%,d", goals.stepsGoal) + " steps",
@@ -96,6 +98,7 @@ public class GoalsFragment extends Fragment {
                     currentGoals.stepsGoal    = newVal;
                     currentGoals.stepsEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.stepsGoal, "steps");
 
         bindGoalRow(view,
@@ -106,6 +109,7 @@ public class GoalsFragment extends Fragment {
                     currentGoals.activeMinutesGoal    = newVal;
                     currentGoals.activeMinutesEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.activeMinutesGoal, "min");
 
         bindGoalRow(view,
@@ -116,9 +120,44 @@ public class GoalsFragment extends Fragment {
                     currentGoals.sleepHoursGoal    = newVal;
                     currentGoals.sleepHoursEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, (int) goals.sleepHoursGoal, "hrs");
 
-        // Diet
+        bindGoalRow(view,
+                R.id.tv_goal_sleep_score, R.id.sw_sleep_score, R.id.btn_edit_sleep_score,
+                "Goal: " + goals.sleepScoreGoal + "/10",
+                goals.sleepScoreEnabled,
+                (newVal, enabled) -> {
+                    currentGoals.sleepScoreGoal    = newVal;
+                    currentGoals.sleepScoreEnabled = enabled;
+                    repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
+                }, goals.sleepScoreGoal, "/10");
+
+        bindGoalRow(view,
+                R.id.tv_goal_heart_rate, R.id.sw_heart_rate, R.id.btn_edit_heart_rate,
+                "Goal: " + goals.heartRateGoal + " bpm",
+                goals.heartRateEnabled,
+                (newVal, enabled) -> {
+                    currentGoals.heartRateGoal    = newVal;
+                    currentGoals.heartRateEnabled = enabled;
+                    repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
+                }, goals.heartRateGoal, "bpm");
+
+        bindGoalRow(view,
+                R.id.tv_goal_floors, R.id.sw_floors, R.id.btn_edit_floors,
+                "Goal: " + goals.floorsGoal + " floors",
+                goals.floorsEnabled,
+                (newVal, enabled) -> {
+                    currentGoals.floorsGoal    = newVal;
+                    currentGoals.floorsEnabled = enabled;
+                    repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
+                }, goals.floorsGoal, "floors");
+
+        // ── DIET ──────────────────────────────────────────────────────────────
+
         bindGoalRow(view,
                 R.id.tv_goal_calories, R.id.sw_calories, R.id.btn_edit_calories,
                 "Goal: " + String.format(Locale.getDefault(), "%,d", goals.caloriesGoal) + " kcal",
@@ -127,6 +166,7 @@ public class GoalsFragment extends Fragment {
                     currentGoals.caloriesGoal    = newVal;
                     currentGoals.caloriesEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.caloriesGoal, "kcal");
 
         bindGoalRow(view,
@@ -137,9 +177,33 @@ public class GoalsFragment extends Fragment {
                     currentGoals.proteinGoal    = newVal;
                     currentGoals.proteinEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.proteinGoal, "g");
 
-        // Mental
+        bindGoalRow(view,
+                R.id.tv_goal_carbs, R.id.sw_carbs, R.id.btn_edit_carbs,
+                "Goal: " + goals.carbsGoal + "g",
+                goals.carbsEnabled,
+                (newVal, enabled) -> {
+                    currentGoals.carbsGoal    = newVal;
+                    currentGoals.carbsEnabled = enabled;
+                    repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
+                }, goals.carbsGoal, "g");
+
+        bindGoalRow(view,
+                R.id.tv_goal_fat, R.id.sw_fat, R.id.btn_edit_fat,
+                "Goal: " + goals.fatGoal + "g",
+                goals.fatEnabled,
+                (newVal, enabled) -> {
+                    currentGoals.fatGoal    = newVal;
+                    currentGoals.fatEnabled = enabled;
+                    repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
+                }, goals.fatGoal, "g");
+
+        // ── MENTAL ────────────────────────────────────────────────────────────
+
         bindGoalRow(view,
                 R.id.tv_goal_mood, R.id.sw_mood, R.id.btn_edit_mood,
                 "Goal: " + goals.moodGoal + "/10",
@@ -148,16 +212,18 @@ public class GoalsFragment extends Fragment {
                     currentGoals.moodGoal    = newVal;
                     currentGoals.moodEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.moodGoal, "/10");
 
         bindGoalRow(view,
                 R.id.tv_goal_journal, R.id.sw_journal_days, R.id.btn_edit_journal_days,
-                "Goal: " + goals.journalDaysGoal + " days",
+                "Goal: " + goals.journalDaysGoal + " days/week",
                 goals.journalDaysEnabled,
                 (newVal, enabled) -> {
                     currentGoals.journalDaysGoal    = newVal;
                     currentGoals.journalDaysEnabled = enabled;
                     repo.saveGoals(currentGoals);
+                    repo.triggerSnapshotUpdate();
                 }, goals.journalDaysGoal, "days");
     }
 
@@ -169,19 +235,21 @@ public class GoalsFragment extends Fragment {
         Switch sw        = root.findViewById(swId);
         TextView btnEdit = root.findViewById(btnEditId);
 
-        tvGoal.setText(goalText);
-        sw.setChecked(enabled);
+        if (tvGoal == null || sw == null || btnEdit == null) return;
 
-        // Toggle enabled/disabled
+        tvGoal.setText(goalText);
+
+        // Set switch state without triggering listener
+        sw.setOnCheckedChangeListener(null);
+        sw.setChecked(enabled);
         sw.setOnCheckedChangeListener((btn, isChecked) ->
                 callback.onUpdate(currentValue, isChecked));
 
-        // Edit goal value
         btnEdit.setOnClickListener(v ->
-                showEditDialog(goalText, currentValue, unit, callback, sw.isChecked()));
+                showEditDialog(currentValue, unit, callback, sw.isChecked()));
     }
 
-    private void showEditDialog(String title, int currentValue, String unit,
+    private void showEditDialog(int currentValue, String unit,
                                 GoalUpdateCallback callback, boolean currentEnabled) {
         android.app.AlertDialog.Builder builder =
                 new android.app.AlertDialog.Builder(requireContext());
@@ -208,7 +276,6 @@ public class GoalsFragment extends Fragment {
         etValue.setSingleLine(true);
         etValue.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         etValue.setHint("Enter value in " + unit);
-
         android.widget.LinearLayout.LayoutParams inputParams =
                 new android.widget.LinearLayout.LayoutParams(
                         android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -237,6 +304,10 @@ public class GoalsFragment extends Fragment {
         btnSave.setOnClickListener(v -> {
             try {
                 int newVal = Integer.parseInt(etValue.getText().toString().trim());
+                if (newVal <= 0) {
+                    etValue.setError("Must be greater than 0");
+                    return;
+                }
                 callback.onUpdate(newVal, currentEnabled);
                 dialog.dismiss();
                 Toast.makeText(getContext(), "Goal updated ✓", Toast.LENGTH_SHORT).show();
@@ -251,6 +322,7 @@ public class GoalsFragment extends Fragment {
     private void setupExpandToggle(View root, int btnId, int containerId) {
         View btn       = root.findViewById(btnId);
         View container = root.findViewById(containerId);
+        if (btn == null || container == null) return;
         btn.setOnClickListener(v -> {
             if (container.getVisibility() == View.VISIBLE) {
                 container.setVisibility(View.GONE);

@@ -20,6 +20,8 @@ public class UserGoals {
     public boolean caloriesBurnedEnabled = true;
     public int activeMinutesGoal = 30;
     public boolean activeMinutesEnabled = true;
+    public int floorsGoal = 10;
+    public boolean floorsEnabled = true;
     public int heartRateGoal = 70;
     public boolean heartRateEnabled = true;
     public double sleepHoursGoal = 8.0;

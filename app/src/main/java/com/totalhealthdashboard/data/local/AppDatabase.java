@@ -13,7 +13,7 @@ import androidx.room.RoomDatabase;
                 UserGoals.class,
                 PhysicalHistoryEntry.class
         },
-        version = 12,
+        version = 13,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

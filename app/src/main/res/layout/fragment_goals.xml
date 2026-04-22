@@ -182,6 +182,29 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Floors goal row -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🏢 Floors Climbed" android:textSize="14sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
+                        <Switch android:id="@+id/sw_floors" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:id="@+id/tv_goal_floors" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Goal: 10 floors" android:textSize="13sp" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
+                            <TextView android:id="@+id/tv_progress_floors" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today: —" android:textSize="12sp" android:textColor="#9E9E9E" android:fontFamily="@font/poppins_semibold"/>
+                        </LinearLayout>
+                        <TextView android:id="@+id/btn_edit_floors" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✏️" android:textSize="18sp" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
         </LinearLayout>
 
         <!-- DIET section header -->

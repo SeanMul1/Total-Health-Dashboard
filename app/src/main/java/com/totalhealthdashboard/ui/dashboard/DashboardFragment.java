@@ -24,6 +24,7 @@ import com.totalhealthdashboard.ui.LoginActivity;
 import java.util.Locale;
 import com.totalhealthdashboard.ui.history.HistoryFragment;
 import com.totalhealthdashboard.ui.MainActivity;
+import com.totalhealthdashboard.repository.ScoreCalculator;
 
 public class DashboardFragment extends Fragment {
 
@@ -217,105 +218,21 @@ public class DashboardFragment extends Fragment {
     }
 
     private int calcPhysicalScore(UserGoals g) {
-        if (latestPhysical == null) return 0;
-
-        int total = 0;
-        int count = 0;
-
-        // Steps
-        if (g.stepsEnabled && g.stepsGoal > 0) {
-            total += Math.min((latestPhysical.getSteps() * 100) / g.stepsGoal, 100);
-            count++;
-        }
-        // Active minutes
-        if (g.activeMinutesEnabled && g.activeMinutesGoal > 0) {
-            total += Math.min((latestPhysical.getActiveMinutes() * 100) / g.activeMinutesGoal, 100);
-            count++;
-        }
-        // Sleep hours
-        if (g.sleepHoursEnabled && g.sleepHoursGoal > 0) {
-            total += (int) Math.min((latestPhysical.getSleepHours() / g.sleepHoursGoal) * 100, 100);
-            count++;
-        }
-        // Sleep quality
-        if (g.sleepScoreEnabled && g.sleepScoreGoal > 0) {
-            total += Math.min((latestPhysical.getSleepScore() * 100) / g.sleepScoreGoal, 100);
-            count++;
-        }
-        // Heart rate — lower is better, score is 100 if at or below goal
-        if (g.heartRateEnabled && g.heartRateGoal > 0 && latestPhysical.getHeartRate() > 0) {
-            int hrScore = latestPhysical.getHeartRate() <= g.heartRateGoal ? 100
-                    : Math.max(0, 100 - (latestPhysical.getHeartRate() - g.heartRateGoal) * 5);
-            total += hrScore;
-            count++;
-        }
-
-        return count == 0 ? 0 : total / count;
+        return ScoreCalculator.calcPhysicalScore(latestPhysical, g);
     }
 
     private int calcDietScore(UserGoals g) {
-        int total = 0;
-        int count = 0;
-
-        int cal   = latestCalories  != null ? latestCalories  : 0;
-        double p  = latestProtein   != null ? latestProtein   : 0;
-        double c  = latestCarbs     != null ? latestCarbs     : 0;
-        double f  = latestFat       != null ? latestFat       : 0;
-
-        // Calories — score 100 when within 10% of goal, penalise over/under
-        if (g.caloriesEnabled && g.caloriesGoal > 0) {
-            double ratio = (double) cal / g.caloriesGoal;
-            int calScore;
-            if (ratio >= 0.9 && ratio <= 1.1) calScore = 100;
-            else if (ratio < 0.9) calScore = (int)(ratio / 0.9 * 100);
-            else calScore = Math.max(0, (int)(100 - (ratio - 1.1) * 200));
-            total += calScore;
-            count++;
-        }
-        // Protein
-        if (g.proteinEnabled && g.proteinGoal > 0) {
-            total += (int) Math.min((p / g.proteinGoal) * 100, 100);
-            count++;
-        }
-        // Carbs
-        if (g.carbsEnabled && g.carbsGoal > 0) {
-            double ratio = c / g.carbsGoal;
-            int carbScore = ratio >= 0.9 && ratio <= 1.1 ? 100
-                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
-                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
-            total += carbScore;
-            count++;
-        }
-        // Fat
-        if (g.fatEnabled && g.fatGoal > 0) {
-            double ratio = f / g.fatGoal;
-            int fatScore = ratio >= 0.9 && ratio <= 1.1 ? 100
-                    : ratio < 0.9 ? (int)(ratio / 0.9 * 100)
-                    : Math.max(0, (int)(100 - (ratio - 1.1) * 200));
-            total += fatScore;
-            count++;
-        }
-
-        return count == 0 ? 0 : total / count;
+        int cal  = latestCalories != null ? latestCalories : 0;
+        double p = latestProtein  != null ? latestProtein  : 0;
+        double c = latestCarbs    != null ? latestCarbs    : 0;
+        double f = latestFat      != null ? latestFat      : 0;
+        return ScoreCalculator.calcDietScore(cal, p, c, f, g);
     }
 
     private int calcMentalScore(UserGoals g) {
-        int total = 0;
-        int count = 0;
-
-        // Mood score
-        if (g.moodEnabled && g.moodGoal > 0 && latestMood != null && latestMood > 0) {
-            total += (int) Math.min((latestMood / g.moodGoal) * 100, 100);
-            count++;
-        }
-        // Journal days
-        if (g.journalDaysEnabled && g.journalDaysGoal > 0) {
-            int days = latestJournalDays != null ? latestJournalDays : 0;
-            total += Math.min((days * 100) / g.journalDaysGoal, 100);
-            count++;
-        }
-
-        return count == 0 ? 0 : total / count;
+        float mood = latestMood != null ? latestMood : 0;
+        int days   = latestJournalDays != null ? latestJournalDays : 0;
+        return ScoreCalculator.calcMentalScore(mood, days, g);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
