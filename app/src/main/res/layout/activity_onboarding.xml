@@ -23,14 +23,37 @@
             android:layout_marginTop="32dp"
             android:layout_marginBottom="8dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Research disclaimer card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="These are your default targets. You can change any of them later in the Goals section."
-            android:textSize="14sp"
-            android:textColor="#9E9E9E"
-            android:lineSpacingMultiplier="1.4"
-            android:layout_marginBottom="32dp"/>
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFF3E0"
+            android:layout_marginBottom="24dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚠️ A note on goal setting"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#E65100"
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/poppins_semibold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="These are your personal health goals. We have provided sensible default ranges based on general guidelines, but everyone is different. We strongly encourage you to do your own research and consult a healthcare professional before setting targets — particularly for calories, heart rate and sleep. Your goals can be changed at any time in the Goals section."
+                    android:textSize="13sp"
+                    android:textColor="#BF360C"
+                    android:lineSpacingMultiplier="1.4"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- PHYSICAL section -->
         <TextView
@@ -57,12 +80,33 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🚶 Daily Steps" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_steps_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="10,000" android:textSize="15sp" android:textStyle="bold" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_steps" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="20000" android:progress="10000" android:progressTint="#4CAF50" android:thumbTint="#4CAF50"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="2,000 ← drag → 20,000" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🚶 Daily Steps"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 100 – 100,000 steps"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_steps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 10000"
+                    android:text="10000"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -74,13 +118,38 @@
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="12dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⏱️ Active Minutes" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_active_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="30 min" android:textSize="15sp" android:textStyle="bold" android:textColor="#4CAF50" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_active" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="120" android:progress="30" android:progressTint="#4CAF50" android:thumbTint="#4CAF50"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="10 ← drag → 120 min" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏱️ Active Minutes"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 600 minutes"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_active"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 30"
+                    android:text="30"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -91,14 +160,82 @@
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="😴 Sleep Hours"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 14 hours"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_sleep"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 8"
+                    android:text="8"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Floors -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="24dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="😴 Sleep Hours" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_sleep_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="8.0 hrs" android:textSize="15sp" android:textStyle="bold" android:textColor="#2196F3" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_sleep" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="12" android:progress="8" android:progressTint="#2196F3" android:thumbTint="#2196F3"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="4 ← drag → 12 hrs" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏢 Floors Climbed"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 500 floors"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_floors"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 10"
+                    android:text="10"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -122,13 +259,38 @@
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="12dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🔥 Daily Calories" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_calories_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2,000 kcal" android:textSize="15sp" android:textStyle="bold" android:textColor="#FF9800" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_calories" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="4000" android:progress="2000" android:progressTint="#FF9800" android:thumbTint="#FF9800"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1,000 ← drag → 4,000 kcal" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔥 Daily Calories"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 15,000 kcal"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_calories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 2000"
+                    android:text="2000"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -139,14 +301,125 @@
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🥩 Daily Protein"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 500g"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_protein"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 50"
+                    android:text="50"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Carbs -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginBottom="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🍞 Daily Carbs"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 1,500g"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_carbs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 250"
+                    android:text="250"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Fat -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="24dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🥩 Daily Protein" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_protein_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="50g" android:textSize="15sp" android:textStyle="bold" android:textColor="#F44336" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_protein" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="200" android:progress="50" android:progressTint="#F44336" android:thumbTint="#F44336"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="10g ← drag → 200g" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🥑 Daily Fat"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 500g"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_fat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 70"
+                    android:text="70"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -162,7 +435,7 @@
             android:layout_marginBottom="12dp"
             android:fontFamily="@font/poppins_semibold"/>
 
-        <!-- Mood target -->
+        <!-- Mood -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -170,13 +443,38 @@
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="12dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🙂 Target Mood Score" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_mood_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="7/10" android:textSize="15sp" android:textStyle="bold" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_mood" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="9" android:progress="6" android:progressTint="#9C27B0" android:thumbTint="#9C27B0"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1 ← drag → 10" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🙂 Target Mood Score"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 10"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_mood"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 7"
+                    android:text="7"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -188,13 +486,38 @@
             app:cardElevation="0dp"
             app:cardBackgroundColor="#FFFFFF"
             android:layout_marginBottom="32dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="📓 Journal Days Per Week" android:textSize="15sp" android:textStyle="bold" android:textColor="#1A1A1A" android:fontFamily="@font/poppins_semibold"/>
-                    <TextView android:id="@+id/tv_journal_val" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="5 days" android:textSize="15sp" android:textStyle="bold" android:textColor="#9C27B0" android:fontFamily="@font/poppins_semibold"/>
-                </LinearLayout>
-                <SeekBar android:id="@+id/sb_journal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="6" android:progress="4" android:progressTint="#9C27B0" android:thumbTint="#9C27B0"/>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="1 ← drag → 7 days" android:textSize="11sp" android:textColor="#BDBDBD" android:gravity="center" android:layout_marginTop="4dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📓 Journal Days Per Week"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A1A1A"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:layout_marginBottom="4dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Range: 1 – 7 days"
+                    android:textSize="11sp"
+                    android:textColor="#BDBDBD"
+                    android:layout_marginBottom="8dp"/>
+                <android.widget.EditText
+                    android:id="@+id/et_journal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="e.g. 5"
+                    android:text="5"
+                    android:inputType="number"
+                    android:textSize="16sp"
+                    android:textColor="#1A1A1A"
+                    android:padding="12dp"
+                    android:background="#F5F5F5"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
