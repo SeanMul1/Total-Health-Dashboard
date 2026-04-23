@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "974473574009",
+    "project_id": "total-health-dashboard-fyp",
+    "storage_bucket": "total-health-dashboard-fyp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974473574009:android:2bfdde63a36ee0b03d86a8",
+        "android_client_info": {
+          "package_name": "com.totalhealthdashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "974473574009-t4dnsep0dqhmnfjhmdagp74o33f5go9t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.totalhealthdashboard",
+            "certificate_hash": "ee2e0c27121d55250cb4e44977a7062cc0224827"
+          }
+        },
+        {
+          "client_id": "974473574009-aq34janp381bppt6uvnrpd4hrg0t89pv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtKYnFgDNxya-3NK8BptjdN3iqFKYisxw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "974473574009-aq34janp381bppt6uvnrpd4hrg0t89pv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
