@@ -73,7 +73,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PHYSICAL ACTIVITY"
+            android:text="HEALTH METRICS AND OVERALL SOCRE FOR THAT DAY"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#9E9E9E"

@@ -627,7 +627,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Physical: Fitbit (demo)  ·  Diet: Open Food Facts  ·  Mental: Journal"
+                android:text="Physical: Fitbit API  ·  Diet: Open Food Facts API ·  Mental: Journal"
                 android:textSize="11sp"
                 android:textColor="#BDBDBD"
                 android:gravity="center"

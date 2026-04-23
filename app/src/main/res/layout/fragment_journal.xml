@@ -182,7 +182,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="RECENT ENTRIES"
+            android:text=""
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#9E9E9E"
