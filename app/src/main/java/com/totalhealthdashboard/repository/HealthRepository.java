@@ -659,6 +659,10 @@ public class HealthRepository {
                 });
     }
 
+    public float getDailyMoodSync(String userId, long dayStart, long dayEnd) {
+        return journalDao.getDailyMoodAverage(userId, dayStart, dayEnd);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
     private long getStartOfDay() {
         Calendar cal = Calendar.getInstance();

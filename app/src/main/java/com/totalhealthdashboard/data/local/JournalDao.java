@@ -39,4 +39,8 @@ public interface JournalDao {
 
     @Query("DELETE FROM nutrition_entries WHERE userId = :userId")
     void deleteAllForUser(String userId);
+
+    @Query("SELECT AVG(moodScore) FROM journal_entries WHERE userId = :userId " +
+            "AND timestamp >= :dayStart AND timestamp < :dayEnd")
+    float getDailyMoodAverage(String userId, long dayStart, long dayEnd);
 }
